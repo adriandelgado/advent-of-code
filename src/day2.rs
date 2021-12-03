@@ -5,7 +5,7 @@ const DOWN_LEN: usize = 5;
 const UP_LEN: usize = 3;
 
 pub fn day2a() -> String {
-    let file = std::fs::read_to_string("./files/day2a.txt").unwrap();
+    let file = std::fs::read_to_string("./files/day2.txt").unwrap();
 
     let (horizontal, depth) = file
         .lines()
@@ -25,7 +25,7 @@ pub fn day2a() -> String {
 }
 
 pub fn day2b() -> String {
-    let file = std::fs::read_to_string("./files/day2a.txt").unwrap();
+    let file = std::fs::read_to_string("./files/day2.txt").unwrap();
 
     let (horizontal, depth) = file
         .lines()

@@ -3,7 +3,7 @@ use std::io::{BufRead, BufReader};
 const LINE_LEN: usize = 12;
 
 pub fn day3a() -> String {
-    let file = std::fs::read_to_string("./files/day3a.txt").unwrap();
+    let file = std::fs::read_to_string("./files/day3.txt").unwrap();
 
     let mut sum = [0; LINE_LEN];
 
@@ -44,7 +44,7 @@ pub fn day3a() -> String {
 }
 
 pub fn day3b() -> String {
-    let file = std::fs::File::open("./files/day3a.txt").unwrap();
+    let file = std::fs::File::open("./files/day3.txt").unwrap();
     let mut oxigen: Vec<_> = BufReader::new(file)
         .lines()
         .map(|line| line.unwrap().into_bytes())
@@ -115,5 +115,5 @@ pub fn day3b() -> String {
 #[test]
 fn day3_is_correct() {
     assert_eq!(day3a(), "3912944");
-    assert_eq!(day3b(), "1488311643");
+    assert_eq!(day3b(), "4996233");
 }

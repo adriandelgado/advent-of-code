@@ -1,7 +1,7 @@
 use itertools::Itertools;
 
 pub fn day1a() -> String {
-    let file = std::fs::read_to_string("./files/day1a.txt").unwrap();
+    let file = std::fs::read_to_string("./files/day1.txt").unwrap();
 
     file.lines()
         .filter_map(|num| num.parse::<u32>().ok())
@@ -12,7 +12,7 @@ pub fn day1a() -> String {
 }
 
 pub fn day1b() -> String {
-    let file = std::fs::read_to_string("./files/day1a.txt").unwrap();
+    let file = std::fs::read_to_string("./files/day1.txt").unwrap();
 
     file.lines()
         .filter_map(|num| num.parse::<u32>().ok())
