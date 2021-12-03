@@ -1,47 +1,57 @@
+use num::Num;
+
 use atoi::ascii_to_digit;
 
 const FORWARD_LEN: usize = 8;
 const DOWN_LEN: usize = 5;
 const UP_LEN: usize = 3;
 
-pub fn a(file: &str) -> String {
-    let (horizontal, depth) = file
-        .lines()
-        .map(|line| {
-            let (&last, command) = line.as_bytes().split_last().unwrap();
-            let amount = ascii_to_digit(last).unwrap();
-            match command.len() {
-                FORWARD_LEN => (amount, 0),
-                DOWN_LEN => (0, amount),
-                UP_LEN => (0, -amount),
-                _ => unreachable!(),
-            }
-        })
-        .fold((0_i64, 0_i64), |(ax, ay), (bx, by)| (ax + bx, ay + by));
+fn parse_line_a(line: &str) -> [i64; 2] {
+    let (&last, command) = line.as_bytes().split_last().unwrap();
+    let amount = ascii_to_digit(last).unwrap();
+    match command.len() {
+        FORWARD_LEN => [amount, 0],
+        DOWN_LEN => [0, amount],
+        UP_LEN => [0, -amount],
+        _ => unreachable!(),
+    }
+}
 
+fn parse_line_b(aim: &mut i64, line: &str) -> Option<[i64; 2]> {
+    let (&last, command) = line.as_bytes().split_last().unwrap();
+    let amount = ascii_to_digit(last).unwrap();
+    Some(match command.len() {
+        FORWARD_LEN => [amount, *aim * amount],
+        DOWN_LEN => {
+            *aim += amount;
+            [0, 0]
+        }
+        UP_LEN => {
+            *aim -= amount;
+            [0, 0]
+        }
+        _ => unreachable!(),
+    })
+}
+
+fn add_arrays<T, const N: usize>(arr1: [T; N], arr2: [T; N]) -> [T; N]
+where
+    T: Num + Copy,
+{
+    let mut result = [T::zero(); N];
+    for i in 0..N {
+        result[i] = arr1[i] + arr2[i];
+    }
+    result
+}
+
+pub fn a(file: &str) -> String {
+    let [horizontal, depth] = file.lines().map(parse_line_a).fold([0, 0], add_arrays);
     (horizontal * depth).to_string()
 }
 
 pub fn b(file: &str) -> String {
-    let (horizontal, depth) = file
-        .lines()
-        .scan(0, |aim, line| {
-            let (&last, command) = line.as_bytes().split_last().unwrap();
-            let amount = ascii_to_digit(last).unwrap();
-            Some(match command.len() {
-                FORWARD_LEN => (amount, *aim * amount),
-                DOWN_LEN => {
-                    *aim += amount;
-                    (0, 0)
-                }
-                UP_LEN => {
-                    *aim -= amount;
-                    (0, 0)
-                }
-                _ => unreachable!(),
-            })
-        })
-        .fold((0_i64, 0_i64), |(ax, ay), (bx, by)| (ax + bx, ay + by));
+    let [horizontal, depth] = file.lines().scan(0, parse_line_b).fold([0, 0], add_arrays);
 
     (horizontal * depth).to_string()
 }
