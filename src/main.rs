@@ -1,22 +1,43 @@
-use std::env;
+use structopt::clap::arg_enum;
+use structopt::StructOpt;
 
-use aoc::{day1, day2, day3};
+arg_enum! {
+    #[derive(Debug)]
+    enum Step {
+        A,
+        B,
+    }
+}
+
+#[derive(Debug, StructOpt)]
+/// Advent of Code solutions.
+///
+/// Run without options to check all solutions.
+struct Opt {
+    /// Day: number from 1 to 25
+    #[structopt(short, long, requires("step"))]
+    day: Option<usize>,
+
+    /// Step
+    #[structopt(short, long, requires("day"), possible_values = &Step::variants(), case_insensitive = true)]
+    step: Option<Step>,
+}
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let opt = Opt::from_args();
 
-    let problem = args.get(1).map(String::as_str);
+    let num = opt.day.map(|n| n - 1);
 
-    let result = match problem {
-        Some("1a") => day1::a(aoc::FILE1),
-        Some("1b") => day1::b(aoc::FILE1),
-        Some("2a") => day2::a(aoc::FILE2),
-        Some("2b") => day2::b(aoc::FILE2),
-        Some("3a") => day3::a(aoc::FILE3),
-        Some("3b") => day3::b(aoc::FILE3),
-        None => "Please input a day to solve".to_string(),
-        _ => "Not solved yet".to_string(),
-    };
-
-    println!("{}", result);
+    if let Some((step, num)) = opt.step.zip(num) {
+        let result = match step {
+            Step::A => aoc::SOLUTIONS[2 * num](aoc::FILES[num]),
+            Step::B => aoc::SOLUTIONS[2 * num + 1](aoc::FILES[num]),
+        };
+        println!("{}", result);
+    } else {
+        for i in 0..aoc::SOLUTIONS.len() {
+            let result = aoc::SOLUTIONS[i](aoc::FILES[i / 2]);
+            println!("{}", result);
+        }
+    }
 }

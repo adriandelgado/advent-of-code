@@ -20,7 +20,8 @@ pub fn b(file: &str) -> String {
 
 #[test]
 fn day1_is_correct() {
-    let file = include_str!("../files/day1.txt");
-    assert_eq!(a(file), "1532");
-    assert_eq!(b(file), "1571");
+    use super::FILES;
+
+    assert_eq!(a(FILES[0]), "1532");
+    assert_eq!(b(FILES[0]), "1571");
 }

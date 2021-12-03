@@ -6,10 +6,16 @@ My [Advent of Code (AoC)](https://adventofcode.com/) solutions using the Rust la
 
 This binary expects a top level directory named `files` with all the input files in the format `dayn.txt` changing `n` with a number from 1 to 25.
 
-To check a solution run the following command
+To get all solutions you can run the default binary
 
 ```bash
-cargo run --release 1a  # run Day 1 part A
+cargo run --release
+```
+
+To check a specific solution run the following command
+
+```bash
+cargo run --release -- --day 1 --step a # get solution for day 1 part A
 ```
 
 ## License

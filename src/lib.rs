@@ -1,7 +1,12 @@
-pub mod day1;
-pub mod day2;
-pub mod day3;
+mod day1;
+mod day2;
+mod day3;
 
-pub const FILE1: &str = include_str!("../files/day1.txt");
-pub const FILE2: &str = include_str!("../files/day2.txt");
-pub const FILE3: &str = include_str!("../files/day3.txt");
+pub const FILES: [&str; 3] = [
+    include_str!("../files/day1.txt"),
+    include_str!("../files/day2.txt"),
+    include_str!("../files/day3.txt"),
+];
+
+pub const SOLUTIONS: [fn(&str) -> String; 6] =
+    [day1::a, day1::b, day2::a, day2::b, day3::a, day3::b];

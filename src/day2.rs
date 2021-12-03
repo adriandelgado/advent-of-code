@@ -6,7 +6,7 @@ const FORWARD_LEN: usize = 8;
 const DOWN_LEN: usize = 5;
 const UP_LEN: usize = 3;
 
-fn parse_line_a(line: &str) -> [i64; 2] {
+fn process_line_a(line: &str) -> [i64; 2] {
     let (&last, command) = line.as_bytes().split_last().unwrap();
     let amount = ascii_to_digit(last).unwrap();
     match command.len() {
@@ -17,7 +17,7 @@ fn parse_line_a(line: &str) -> [i64; 2] {
     }
 }
 
-fn parse_line_b(aim: &mut i64, line: &str) -> Option<[i64; 2]> {
+fn process_line_b(aim: &mut i64, line: &str) -> Option<[i64; 2]> {
     let (&last, command) = line.as_bytes().split_last().unwrap();
     let amount = ascii_to_digit(last).unwrap();
     Some(match command.len() {
@@ -46,19 +46,23 @@ where
 }
 
 pub fn a(file: &str) -> String {
-    let [horizontal, depth] = file.lines().map(parse_line_a).fold([0, 0], add_arrays);
+    let [horizontal, depth] = file.lines().map(process_line_a).fold([0, 0], add_arrays);
     (horizontal * depth).to_string()
 }
 
 pub fn b(file: &str) -> String {
-    let [horizontal, depth] = file.lines().scan(0, parse_line_b).fold([0, 0], add_arrays);
+    let [horizontal, depth] = file
+        .lines()
+        .scan(0, process_line_b)
+        .fold([0, 0], add_arrays);
 
     (horizontal * depth).to_string()
 }
 
 #[test]
 fn day2_is_correct() {
-    let file = include_str!("../files/day2.txt");
-    assert_eq!(a(file), "1383564");
-    assert_eq!(b(file), "1488311643");
+    use super::FILES;
+
+    assert_eq!(a(FILES[1]), "1383564");
+    assert_eq!(b(FILES[1]), "1488311643");
 }

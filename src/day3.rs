@@ -106,8 +106,8 @@ pub fn b(file: &str) -> String {
 
 #[test]
 fn day3_is_correct() {
-    let file = include_str!("../files/day3.txt");
+    use super::FILES;
 
-    assert_eq!(a(file), "3912944");
-    assert_eq!(b(file), "4996233");
+    assert_eq!(a(FILES[2]), "3912944");
+    assert_eq!(b(FILES[2]), "4996233");
 }
