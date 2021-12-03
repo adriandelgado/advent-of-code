@@ -12,8 +12,8 @@ fn main() {
     let problem = args.get(1).map(String::as_str);
 
     let result = match problem {
-        Some("1a") => day1a(),
-        Some("1b") => day1b(),
+        // Some("1a") => day1a(),
+        // Some("1b") => day1b(),
         Some("2a") => day2a(),
         Some("2b") => day2b(),
         Some("3a") => day3a(),
