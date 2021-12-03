@@ -1,10 +1,6 @@
-use std::io::{BufRead, BufReader};
-
 const LINE_LEN: usize = 12;
 
-pub fn day3a() -> String {
-    let file = std::fs::read_to_string("./files/day3.txt").unwrap();
-
+pub fn day3a(file: &str) -> String {
     let mut sum = [0; LINE_LEN];
 
     for line in file.lines() {
@@ -43,12 +39,8 @@ pub fn day3a() -> String {
     (gamma * epsilon).to_string()
 }
 
-pub fn day3b() -> String {
-    let file = std::fs::File::open("./files/day3.txt").unwrap();
-    let mut oxigen: Vec<_> = BufReader::new(file)
-        .lines()
-        .map(|line| line.unwrap().into_bytes())
-        .collect();
+pub fn day3b(file: &str) -> String {
+    let mut oxigen: Vec<_> = file.lines().map(|line| line.as_bytes()).collect();
     let mut co2 = oxigen.clone();
     for idx in 0..LINE_LEN {
         let mut sum_oxigen = 0;
@@ -114,6 +106,8 @@ pub fn day3b() -> String {
 
 #[test]
 fn day3_is_correct() {
-    assert_eq!(day3a(), "3912944");
-    assert_eq!(day3b(), "4996233");
+    let file = include_str!("../files/day3.txt");
+
+    assert_eq!(day3a(file), "3912944");
+    assert_eq!(day3b(file), "4996233");
 }

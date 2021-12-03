@@ -14,10 +14,10 @@ fn main() {
     let result = match problem {
         // Some("1a") => day1a(),
         // Some("1b") => day1b(),
-        Some("2a") => day2a(),
-        Some("2b") => day2b(),
-        Some("3a") => day3a(),
-        Some("3b") => day3b(),
+        // Some("2a") => day2a(),
+        // Some("2b") => day2b(),
+        // Some("3a") => day3a(),
+        // Some("3b") => day3b(),
         None => "Please input a day to solve".to_string(),
         _ => "Not solved yet".to_string(),
     };
