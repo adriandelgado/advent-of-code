@@ -4,7 +4,7 @@ const FORWARD_LEN: usize = 8;
 const DOWN_LEN: usize = 5;
 const UP_LEN: usize = 3;
 
-pub fn day2a(file: &str) -> String {
+pub fn a(file: &str) -> String {
     let (horizontal, depth) = file
         .lines()
         .map(|line| {
@@ -22,7 +22,7 @@ pub fn day2a(file: &str) -> String {
     (horizontal * depth).to_string()
 }
 
-pub fn day2b(file: &str) -> String {
+pub fn b(file: &str) -> String {
     let (horizontal, depth) = file
         .lines()
         .scan(0, |aim, line| {
@@ -49,6 +49,6 @@ pub fn day2b(file: &str) -> String {
 #[test]
 fn day2_is_correct() {
     let file = include_str!("../files/day2.txt");
-    assert_eq!(day2a(file), "1383564");
-    assert_eq!(day2b(file), "1488311643");
+    assert_eq!(a(file), "1383564");
+    assert_eq!(b(file), "1488311643");
 }

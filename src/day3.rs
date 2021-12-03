@@ -1,6 +1,6 @@
 const LINE_LEN: usize = 12;
 
-pub fn day3a(file: &str) -> String {
+pub fn a(file: &str) -> String {
     let mut sum = [0; LINE_LEN];
 
     for line in file.lines() {
@@ -39,7 +39,7 @@ pub fn day3a(file: &str) -> String {
     (gamma * epsilon).to_string()
 }
 
-pub fn day3b(file: &str) -> String {
+pub fn b(file: &str) -> String {
     let mut oxigen: Vec<_> = file.lines().map(|line| line.as_bytes()).collect();
     let mut co2 = oxigen.clone();
     for idx in 0..LINE_LEN {
@@ -108,6 +108,6 @@ pub fn day3b(file: &str) -> String {
 fn day3_is_correct() {
     let file = include_str!("../files/day3.txt");
 
-    assert_eq!(day3a(file), "3912944");
-    assert_eq!(day3b(file), "4996233");
+    assert_eq!(a(file), "3912944");
+    assert_eq!(b(file), "4996233");
 }

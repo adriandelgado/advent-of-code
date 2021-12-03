@@ -1,10 +1,6 @@
 use std::env;
 
-use aoc::{
-    day1::{day1a, day1b},
-    day2::{day2a, day2b},
-    day3::{day3a, day3b},
-};
+use aoc::{day1, day2, day3};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -12,12 +8,12 @@ fn main() {
     let problem = args.get(1).map(String::as_str);
 
     let result = match problem {
-        // Some("1a") => day1a(),
-        // Some("1b") => day1b(),
-        // Some("2a") => day2a(),
-        // Some("2b") => day2b(),
-        // Some("3a") => day3a(),
-        // Some("3b") => day3b(),
+        Some("1a") => day1::a(aoc::FILE1),
+        Some("1b") => day1::b(aoc::FILE1),
+        Some("2a") => day2::a(aoc::FILE2),
+        Some("2b") => day2::b(aoc::FILE2),
+        Some("3a") => day3::a(aoc::FILE3),
+        Some("3b") => day3::b(aoc::FILE3),
         None => "Please input a day to solve".to_string(),
         _ => "Not solved yet".to_string(),
     };
