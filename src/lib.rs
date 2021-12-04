@@ -3,9 +3,9 @@ mod day2;
 mod day3;
 
 pub const FILES: [&str; 3] = [
-    include_str!("../files/day1.txt"),
-    include_str!("../files/day2.txt"),
-    include_str!("../files/day3.txt"),
+    include_str!("../files/day01.txt"),
+    include_str!("../files/day02.txt"),
+    include_str!("../files/day03.txt"),
 ];
 
 pub const SOLUTIONS: [fn(&str) -> String; 6] =

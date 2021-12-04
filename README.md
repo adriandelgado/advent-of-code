@@ -1,10 +1,12 @@
-# Advent of Code in Rust
+# Advent of Code in Rust :crab:
 
-My [Advent of Code (AoC)](https://adventofcode.com/) solutions using the Rust language. :crab:
+My [Advent of Code (AoC)](https://adventofcode.com/) solutions using the Rust language.
+
+## Build
+
+The build process expects a top level directory named `files` with all the input files in the format `dayNN.txt` where `NN` is a number from 01 to 25 (left padded).
 
 ## Usage
-
-This binary expects a top level directory named `files` with all the input files in the format `dayn.txt` changing `n` with a number from 1 to 25.
 
 To get all solutions you can run the default binary
 
