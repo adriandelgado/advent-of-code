@@ -45,11 +45,13 @@ where
     result
 }
 
+#[inline]
 pub fn a(file: &str) -> String {
     let [horizontal, depth] = file.lines().map(process_line_a).fold([0, 0], add_arrays);
     (horizontal * depth).to_string()
 }
 
+#[inline]
 pub fn b(file: &str) -> String {
     let [horizontal, depth] = file
         .lines()

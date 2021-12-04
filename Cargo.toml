@@ -8,3 +8,10 @@ atoi = "0.4.0"
 itertools = "0.10.1"
 num = "0.4.0"
 structopt = "0.3.25"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "bench-main"
+harness = false

@@ -1,5 +1,6 @@
 const LINE_LEN: usize = 12;
 
+#[inline]
 pub fn a(file: &str) -> String {
     let mut sum = [0; LINE_LEN];
 
@@ -39,6 +40,7 @@ pub fn a(file: &str) -> String {
     (gamma * epsilon).to_string()
 }
 
+#[inline]
 pub fn b(file: &str) -> String {
     let mut oxigen: Vec<_> = file.lines().map(|line| line.as_bytes()).collect();
     let mut co2 = oxigen.clone();

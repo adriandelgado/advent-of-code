@@ -1,5 +1,6 @@
 use itertools::Itertools;
 
+#[inline]
 pub fn a(file: &str) -> String {
     file.lines()
         .filter_map(|num| num.parse::<u32>().ok())
@@ -9,6 +10,7 @@ pub fn a(file: &str) -> String {
         .to_string()
 }
 
+#[inline]
 pub fn b(file: &str) -> String {
     file.lines()
         .filter_map(|num| num.parse::<u32>().ok())
