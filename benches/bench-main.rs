@@ -8,6 +8,12 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("02B", |b| b.iter(|| aoc::day2::b(black_box(FILES[1]))));
     c.bench_function("03A", |b| b.iter(|| aoc::day3::a(black_box(FILES[2]))));
     c.bench_function("03B", |b| b.iter(|| aoc::day3::b(black_box(FILES[2]))));
+    c.bench_function("04A", |b| b.iter(|| aoc::day4::a(black_box(FILES[3]))));
+    c.bench_function("04B", |b| b.iter(|| aoc::day4::b(black_box(FILES[3]))));
+    c.bench_function("05A", |b| b.iter(|| aoc::day5::a(black_box(FILES[4]))));
+    c.bench_function("05B", |b| b.iter(|| aoc::day5::b(black_box(FILES[4]))));
+    c.bench_function("06A", |b| b.iter(|| aoc::day6::a(black_box(FILES[5]))));
+    c.bench_function("06B", |b| b.iter(|| aoc::day6::b(black_box(FILES[5]))));
 }
 
 criterion_group!(benches, criterion_benchmark);
