@@ -16,6 +16,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("06B", |b| b.iter(|| aoc::day6::b(black_box(FILES[5]))));
     c.bench_function("07A", |b| b.iter(|| aoc::day7::a(black_box(FILES[6]))));
     c.bench_function("07B", |b| b.iter(|| aoc::day7::b(black_box(FILES[6]))));
+    c.bench_function("08A", |b| b.iter(|| aoc::day8::a(black_box(FILES[7]))));
+    c.bench_function("08B", |b| b.iter(|| aoc::day8::b(black_box(FILES[7]))));
 }
 
 criterion_group!(benches, criterion_benchmark);

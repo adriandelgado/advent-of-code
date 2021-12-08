@@ -5,8 +5,9 @@ pub mod day4;
 pub mod day5;
 pub mod day6;
 pub mod day7;
+pub mod day8;
 
-pub const FILES: [&str; 7] = [
+pub const FILES: [&str; 8] = [
     include_str!("../files/day01.txt"),
     include_str!("../files/day02.txt"),
     include_str!("../files/day03.txt"),
@@ -14,9 +15,10 @@ pub const FILES: [&str; 7] = [
     include_str!("../files/day05.txt"),
     include_str!("../files/day06.txt"),
     include_str!("../files/day07.txt"),
+    include_str!("../files/day08.txt"),
 ];
 
-pub const SOLUTIONS: [fn(&str) -> String; 14] = [
+pub const SOLUTIONS: [fn(&str) -> String; 16] = [
     day1::a,
     day1::b,
     day2::a,
@@ -31,4 +33,6 @@ pub const SOLUTIONS: [fn(&str) -> String; 14] = [
     day6::b,
     day7::a,
     day7::b,
+    day8::a,
+    day8::b,
 ];
