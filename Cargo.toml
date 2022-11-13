@@ -1,0 +1,12 @@
+[package]
+name = "aoc"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+clap = { version = "4.0.23", features = ["derive"] }
+color-eyre = "0.6.2"
+dotenvy = "0.15.6"
+nom = "7.1.1"
+ureq = { version = "2.5.0", features = ["cookies"] }
