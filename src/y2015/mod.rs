@@ -4,6 +4,7 @@ mod d03;
 mod d04;
 mod d05;
 mod d06;
+mod d07;
 
 #[must_use]
 pub fn solve(day: u8, part: u8, input: &str) -> String {
@@ -20,6 +21,8 @@ pub fn solve(day: u8, part: u8, input: &str) -> String {
         (5, 2) => d05::part2(input),
         (6, 1) => d06::part1(input),
         (6, 2) => d06::part2(input),
+        (7, 1) => d07::part1(input),
+        (7, 2) => d07::part2(input),
         _ => unimplemented!(),
     }
 }

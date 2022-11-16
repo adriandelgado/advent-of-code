@@ -8,7 +8,9 @@ edition = "2021"
 clap = { version = "4.0.23", features = ["derive"] }
 color-eyre = "0.6.2"
 dotenvy = "0.15.6"
+itertools = "0.10.5"
 md-5 = "0.10.5"
 ndarray = "0.15.6"
 nom = "7.1.1"
+petgraph = "0.6.2"
 ureq = { version = "2.5.0", features = ["cookies"] }
