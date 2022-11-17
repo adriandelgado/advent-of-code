@@ -11,8 +11,7 @@ use petgraph::{algo::toposort, prelude::DiGraphMap, Direction};
 use std::collections::HashMap;
 
 pub(super) fn part1(input: &str) -> String {
-    let circuit =
-        DiGraphMap::from_edges(input.lines().map(|line| parse(line).unwrap().1).flatten());
+    let circuit = DiGraphMap::from_edges(input.lines().flat_map(|line| parse(line).unwrap().1));
 
     let mut signals = HashMap::new();
 
