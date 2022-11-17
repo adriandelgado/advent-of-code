@@ -8,6 +8,7 @@ mod d07;
 mod d08;
 mod d09;
 mod d10;
+mod d11;
 
 #[must_use]
 pub fn solve(day: u8, part: u8, input: &str) -> String {
@@ -32,6 +33,8 @@ pub fn solve(day: u8, part: u8, input: &str) -> String {
         (9, 2) => d09::part2(input),
         (10, 1) => d10::part1(input),
         (10, 2) => d10::part2(input),
+        (11, 1) => d11::part1(input),
+        (11, 2) => d11::part2(input),
         _ => unimplemented!(),
     }
 }
