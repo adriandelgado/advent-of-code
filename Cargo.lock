@@ -29,6 +29,7 @@ dependencies = [
  "ndarray",
  "nom",
  "petgraph",
+ "serde_json",
  "ureq",
 ]
 

@@ -21,8 +21,8 @@ impl Password {
         self.0 += 1;
     }
 
-    fn is_valid(&self) -> bool {
-        let pass: [u8; 8] = (*self).into();
+    fn is_valid(self) -> bool {
+        let pass: [u8; 8] = self.into();
         let mut iter = pass.windows(2);
 
         iter.any(|pair| pair[0] == pair[1])
@@ -35,6 +35,7 @@ impl Password {
 }
 
 impl From<&str> for Password {
+    #[allow(clippy::cast_possible_truncation)]
     fn from(pass: &str) -> Self {
         let out = pass.chars().rev().enumerate().fold(0, |acc, (i, c)| {
             acc + char_to_digit(c) * 23_u64.pow(i as u32)
@@ -80,6 +81,7 @@ fn char_to_digit(ch: char) -> u64 {
 }
 
 #[inline]
+#[allow(clippy::cast_possible_truncation)]
 fn digit_to_byte(d: u64) -> u8 {
     let offset = match d {
         0..=7 => 97,
