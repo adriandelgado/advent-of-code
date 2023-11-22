@@ -1,20 +1,20 @@
 use md5::{Digest, Md5};
 
-pub(super) fn part1(input: &str) -> String {
+pub fn part1(input: &str) -> i32 {
     let input = input.trim_end();
     for n in 0.. {
         if verify_hash_5(format!("{input}{n}").as_bytes()) {
-            return n.to_string();
+            return n;
         }
     }
     unreachable!()
 }
 
-pub(super) fn part2(input: &str) -> String {
+pub fn part2(input: &str) -> i32 {
     let input = input.trim_end();
     for n in 0.. {
         if verify_hash_6(format!("{input}{n}").as_bytes()) {
-            return n.to_string();
+            return n;
         }
     }
     unreachable!()

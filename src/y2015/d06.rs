@@ -1,17 +1,15 @@
-use ndarray::{Array2, Dim, SliceInfo, SliceInfoElem};
-use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::u16,
-    combinator::value,
-    sequence::{separated_pair, tuple},
-    IResult,
+use ndarray::{s, Array2, Dim, SliceInfo, SliceInfoElem};
+use winnow::{
+    ascii::dec_uint,
+    combinator::{alt, separated_pair},
+    PResult, Parser,
 };
+
 use std::ops::Not;
 
-pub(super) fn part1(input: &str) -> String {
+pub fn part1(input: &str) -> u32 {
     let mut arr = Array2::<bool>::default((1000, 1000));
-    for action in input.lines().map(|line| action(line).unwrap().1) {
+    for action in input.lines().map(|line| action.parse(line).unwrap()) {
         match action.kind {
             ActionKind::TurnOn => arr.slice_mut(action.slice).fill(true),
             ActionKind::TurnOff => arr.slice_mut(action.slice).fill(false),
@@ -19,12 +17,12 @@ pub(super) fn part1(input: &str) -> String {
         }
     }
 
-    arr.mapv(u32::from).sum().to_string()
+    arr.mapv(u32::from).sum()
 }
 
-pub(super) fn part2(input: &str) -> String {
+pub fn part2(input: &str) -> u32 {
     let mut arr = Array2::<u32>::default((1000, 1000));
-    for action in input.lines().map(|line| action(line).unwrap().1) {
+    for action in input.lines().map(|line| action.parse(line).unwrap()) {
         match action.kind {
             ActionKind::TurnOn => arr.slice_mut(action.slice).mapv_inplace(|n| n + 1),
             ActionKind::TurnOff => arr
@@ -33,42 +31,30 @@ pub(super) fn part2(input: &str) -> String {
             ActionKind::Toggle => arr.slice_mut(action.slice).mapv_inplace(|n| n + 2),
         }
     }
-    arr.sum().to_string()
+    arr.sum()
 }
 
-fn action(input: &str) -> IResult<&str, Action> {
-    let (rest, (kind, ((x1, y1), (x2, y2)))) = tuple((
+fn action(input: &mut &str) -> PResult<Action> {
+    (
         alt((
-            value(ActionKind::TurnOn, tag("turn on ")),
-            value(ActionKind::TurnOff, tag("turn off ")),
-            value(ActionKind::Toggle, tag("toggle ")),
+            "turn on ".value(ActionKind::TurnOn),
+            "turn off ".value(ActionKind::TurnOff),
+            "toggle ".value(ActionKind::Toggle),
         )),
         separated_pair(
-            separated_pair(u16, tag(","), u16),
-            tag(" through "),
-            separated_pair(u16, tag(","), u16),
+            separated_pair(dec_uint, ",", dec_uint),
+            " through ",
+            separated_pair(dec_uint, ",", dec_uint),
         ),
-    ))(input)?;
-
-    let slice_start = pair_to_slice(x1, x2);
-    let slice_end = pair_to_slice(y1, y2);
-    Ok((
-        rest,
-        Action {
+    )
+        .map(|(kind, ((x1, y1), (x2, y2))): MapInput| Action {
             kind,
-            slice: [slice_start, slice_end].try_into().unwrap(),
-        },
-    ))
+            slice: s![x1..=x2, y1..=y2],
+        })
+        .parse_next(input)
 }
 
-#[allow(clippy::cast_possible_wrap)]
-fn pair_to_slice(first: u16, last: u16) -> SliceInfoElem {
-    SliceInfoElem::Slice {
-        start: first as isize,
-        end: Some(last as isize + 1),
-        step: 1,
-    }
-}
+type MapInput = (ActionKind, ((i32, i32), (i32, i32)));
 
 #[derive(Debug, Clone, Copy)]
 enum ActionKind {

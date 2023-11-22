@@ -1,14 +1,13 @@
 use itertools::Itertools;
-use nom::{
-    bytes::complete::tag,
-    character::complete::{alpha1, u32},
-    sequence::{terminated, tuple},
-    IResult,
-};
 use petgraph::{algo::all_simple_paths, prelude::*};
+use winnow::{
+    ascii::{alpha1, dec_uint},
+    combinator::terminated,
+    PResult, Parser,
+};
 
-pub(super) fn part1(input: &str) -> String {
-    let graph = UnGraphMap::from_edges(input.lines().map(|line| parse_line(line).unwrap().1));
+pub fn part1(input: &str) -> u32 {
+    let graph = UnGraphMap::from_edges(input.lines().map(|line| parse_line.parse(line).unwrap()));
     graph
         .nodes()
         .combinations(2)
@@ -25,15 +24,14 @@ pub(super) fn part1(input: &str) -> String {
             path.into_iter()
                 .tuple_windows()
                 .filter_map(|(a, b)| graph.edge_weight(a, b))
-                .sum::<u32>()
+                .sum()
         })
         .min()
         .unwrap()
-        .to_string()
 }
 
-pub(super) fn part2(input: &str) -> String {
-    let graph = UnGraphMap::from_edges(input.lines().map(|line| parse_line(line).unwrap().1));
+pub fn part2(input: &str) -> u32 {
+    let graph = UnGraphMap::from_edges(input.lines().map(|line| parse_line.parse(line).unwrap()));
     graph
         .nodes()
         .combinations(2)
@@ -50,17 +48,17 @@ pub(super) fn part2(input: &str) -> String {
             path.into_iter()
                 .tuple_windows()
                 .filter_map(|(a, b)| graph.edge_weight(a, b))
-                .sum::<u32>()
+                .sum()
         })
         .max()
         .unwrap()
-        .to_string()
 }
 
-fn parse_line(input: &str) -> IResult<&str, (&str, &str, u32)> {
-    tuple((
-        terminated(alpha1, tag(" to ")),
-        terminated(alpha1, tag(" = ")),
-        u32,
-    ))(input)
+fn parse_line<'a>(input: &mut &'a str) -> PResult<(&'a str, &'a str, u32)> {
+    (
+        terminated(alpha1, " to "),
+        terminated(alpha1, " = "),
+        dec_uint,
+    )
+        .parse_next(input)
 }

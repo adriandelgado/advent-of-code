@@ -1,41 +1,43 @@
 use ndarray::{Array2, Axis};
 use ndarray_stats::QuantileExt;
-use nom::{
-    bytes::complete::tag,
-    character::complete::{alpha1, u32},
-    combinator::map,
-    sequence::{terminated, tuple},
-    IResult,
+use winnow::{
+    ascii::{alpha1, dec_uint},
+    combinator::terminated,
+    PResult, Parser,
 };
 
-const TOTAL_SECS: usize = 2503;
+const TOTAL_SECS: u32 = 2503;
 
-pub(super) fn part1(input: &str) -> String {
+pub fn part1(input: &str) -> u32 {
     input
         .lines()
-        .map(|line| parse_line(line).unwrap().1)
-        .map(|reindeer| compute_kms(reindeer, TOTAL_SECS as u32))
+        .map(|line| parse_line.parse(line).unwrap())
+        .map(|reindeer| compute_kms(reindeer, TOTAL_SECS))
         .max()
         .unwrap()
-        .to_string()
 }
 
-pub(super) fn part2(input: &str) -> String {
+pub fn part2(input: &str) -> u32 {
     let reindeer_kms: Vec<u32> = input
         .lines()
-        .map(|line| parse_line(line).unwrap().1)
-        .flat_map(|reindeer| (0..TOTAL_SECS).map(move |sec| compute_kms(reindeer, sec as u32)))
+        .map(|line| parse_line.parse(line).unwrap())
+        .flat_map(|reindeer| (0..TOTAL_SECS).map(move |sec| compute_kms(reindeer, sec)))
         .collect();
 
-    let mut reindeer_kms =
-        Array2::from_shape_vec((reindeer_kms.len() / TOTAL_SECS, TOTAL_SECS), reindeer_kms)
-            .unwrap();
+    let mut reindeer_kms = Array2::from_shape_vec(
+        (
+            reindeer_kms.len() / TOTAL_SECS as usize,
+            TOTAL_SECS as usize,
+        ),
+        reindeer_kms,
+    )
+    .unwrap();
 
     for mut col in reindeer_kms.columns_mut().into_iter().skip(1) {
         let max = *col.max().unwrap();
         col.mapv_inplace(|kms| (kms == max).into());
     }
-    reindeer_kms.sum_axis(Axis(1)).max().unwrap().to_string()
+    *reindeer_kms.sum_axis(Axis(1)).max().unwrap()
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -45,20 +47,19 @@ struct Reindeer {
     rest_secs: u32,
 }
 
-fn parse_line(input: &str) -> IResult<&str, Reindeer> {
-    map(
-        tuple((
-            terminated(alpha1, tag(" can fly ")),
-            terminated(u32, tag(" km/s for ")),
-            terminated(u32, tag(" seconds, but then must rest for ")),
-            terminated(u32, tag(" seconds.")),
-        )),
-        |(_, velocity, stamina_secs, rest_secs)| Reindeer {
+fn parse_line(input: &mut &str) -> PResult<Reindeer> {
+    (
+        terminated(alpha1, " can fly "),
+        terminated(dec_uint, " km/s for "),
+        terminated(dec_uint, " seconds, but then must rest for "),
+        terminated(dec_uint, " seconds."),
+    )
+        .map(|(_, velocity, stamina_secs, rest_secs)| Reindeer {
             velocity,
             stamina_secs,
             rest_secs,
-        },
-    )(input)
+        })
+        .parse_next(input)
 }
 
 fn compute_kms(

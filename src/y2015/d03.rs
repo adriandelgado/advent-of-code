@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-pub(super) fn part1(input: &str) -> String {
+pub fn part1(input: &str) -> usize {
     let mut houses = HashSet::new();
 
     houses.insert([0, 0]);
@@ -18,10 +18,10 @@ pub(super) fn part1(input: &str) -> String {
         current = add_arr(current, vector);
         houses.insert(current);
     }
-    houses.len().to_string()
+    houses.len()
 }
 
-pub(super) fn part2(input: &str) -> String {
+pub fn part2(input: &str) -> usize {
     let mut houses = HashSet::new();
 
     houses.insert([0, 0]);
@@ -45,7 +45,7 @@ pub(super) fn part2(input: &str) -> String {
         *current = add_arr(*current, vector);
         houses.insert(*current);
     }
-    houses.len().to_string()
+    houses.len()
 }
 
 fn add_arr(arr1: [i32; 2], arr2: [i32; 2]) -> [i32; 2] {

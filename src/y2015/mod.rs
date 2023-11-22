@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 mod d01;
 mod d02;
 mod d03;
@@ -12,38 +14,41 @@ mod d11;
 mod d12;
 mod d13;
 mod d14;
+mod d15;
 
 #[must_use]
-pub fn solve(day: u8, part: u8, input: &str) -> String {
+pub fn solve(day: u8, part: u8, input: &str) -> Box<dyn Display> {
     match (day, part) {
-        (1, 1) => d01::part1(input),
-        (1, 2) => d01::part2(input),
-        (2, 1) => d02::part1(input),
-        (2, 2) => d02::part2(input),
-        (3, 1) => d03::part1(input),
-        (3, 2) => d03::part2(input),
-        (4, 1) => d04::part1(input),
-        (4, 2) => d04::part2(input),
-        (5, 1) => d05::part1(input),
-        (5, 2) => d05::part2(input),
-        (6, 1) => d06::part1(input),
-        (6, 2) => d06::part2(input),
-        (7, 1) => d07::part1(input),
-        (7, 2) => d07::part2(input),
-        (8, 1) => d08::part1(input),
-        (8, 2) => d08::part2(input),
-        (9, 1) => d09::part1(input),
-        (9, 2) => d09::part2(input),
-        (10, 1) => d10::part1(input),
-        (10, 2) => d10::part2(input),
-        (11, 1) => d11::part1(input),
-        (11, 2) => d11::part2(input),
-        (12, 1) => d12::part1(input),
-        (12, 2) => d12::part2(input),
-        (13, 1) => d13::part1(input),
-        (13, 2) => d13::part2(input),
-        (14, 1) => d14::part1(input),
-        (14, 2) => d14::part2(input),
-        _ => unimplemented!(),
+        (1, 1) => Box::new(d01::part1(input)),
+        (1, 2) => Box::new(d01::part2(input)),
+        (2, 1) => Box::new(d02::part1(input)),
+        (2, 2) => Box::new(d02::part2(input)),
+        (3, 1) => Box::new(d03::part1(input)),
+        (3, 2) => Box::new(d03::part2(input)),
+        (4, 1) => Box::new(d04::part1(input)),
+        (4, 2) => Box::new(d04::part2(input)),
+        (5, 1) => Box::new(d05::part1(input)),
+        (5, 2) => Box::new(d05::part2(input)),
+        (6, 1) => Box::new(d06::part1(input)),
+        (6, 2) => Box::new(d06::part2(input)),
+        (7, 1) => Box::new(d07::part1(input)),
+        (7, 2) => Box::new(d07::part2(input)),
+        (8, 1) => Box::new(d08::part1(input)),
+        (8, 2) => Box::new(d08::part2(input)),
+        (9, 1) => Box::new(d09::part1(input)),
+        (9, 2) => Box::new(d09::part2(input)),
+        (10, 1) => Box::new(d10::part1(input)),
+        (10, 2) => Box::new(d10::part2(input)),
+        (11, 1) => Box::new(d11::part1(input)),
+        (11, 2) => Box::new(d11::part2(input)),
+        (12, 1) => Box::new(d12::part1(input)),
+        (12, 2) => Box::new(d12::part2(input)),
+        (13, 1) => Box::new(d13::part1(input)),
+        (13, 2) => Box::new(d13::part2(input)),
+        (14, 1) => Box::new(d14::part1(input)),
+        (14, 2) => Box::new(d14::part2(input)),
+        (15, 1) => Box::new(d15::part1(input)),
+        (15, 2) => Box::new(d15::part2(input)),
+        _ => unimplemented!(), // TODO: unreachable once completed
     }
 }

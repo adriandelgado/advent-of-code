@@ -1,17 +1,17 @@
-pub(super) fn part1(input: &str) -> String {
+pub fn part1(input: &str) -> usize {
     let mut new_input = Vec::from(input.trim_end());
     for _ in 0..40 {
         process_line(&mut new_input);
     }
-    new_input.len().to_string()
+    new_input.len()
 }
 
-pub(super) fn part2(input: &str) -> String {
+pub fn part2(input: &str) -> usize {
     let mut new_input = Vec::from(input.trim_end());
     for _ in 0..50 {
         process_line(&mut new_input);
     }
-    new_input.len().to_string()
+    new_input.len()
 }
 
 fn process_line(line: &mut Vec<u8>) {

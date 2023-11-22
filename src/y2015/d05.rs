@@ -1,19 +1,17 @@
 use std::collections::HashMap;
 
-pub(super) fn part1(input: &str) -> String {
+pub fn part1(input: &str) -> usize {
     input
         .lines()
         .filter(|line| min_3_vowels(line) && twice_in_a_row(line) && not_forbidden(line))
         .count()
-        .to_string()
 }
 
-pub(super) fn part2(input: &str) -> String {
+pub fn part2(input: &str) -> usize {
     input
         .lines()
         .filter(|line| twice_non_overlapping(line) && twice_skipping(line))
         .count()
-        .to_string()
 }
 
 fn min_3_vowels(line: &str) -> bool {
@@ -36,7 +34,9 @@ fn not_forbidden(line: &str) -> bool {
 fn twice_non_overlapping(line: &str) -> bool {
     let mut prev = HashMap::new();
     for (new_idx, pair) in line.as_bytes().windows(2).enumerate() {
-        let Some(old_idx) = prev.insert(pair, new_idx) else { continue; };
+        let Some(old_idx) = prev.insert(pair, new_idx) else {
+            continue;
+        };
         if old_idx + 1 != new_idx {
             return true;
         }

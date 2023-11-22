@@ -1,18 +1,15 @@
 use itertools::Itertools;
-use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{alpha1, i64},
-    combinator::value,
-    sequence::{delimited, terminated, tuple},
-    IResult,
-};
 use petgraph::{algo::all_simple_paths, prelude::UnGraphMap};
+use winnow::{
+    ascii::{alpha1, dec_int},
+    combinator::{alt, delimited, terminated},
+    PResult, Parser,
+};
 
-pub(super) fn part1(input: &str) -> String {
+pub fn part1(input: &str) -> i64 {
     let mut graph = UnGraphMap::new();
 
-    for (a, b, weight) in input.lines().map(|line| parse_line(line).unwrap().1) {
+    for (a, b, weight) in input.lines().map(|line| parse_line.parse(line).unwrap()) {
         if let Some(w) = graph.edge_weight_mut(a, b) {
             *w += weight;
         } else {
@@ -42,13 +39,12 @@ pub(super) fn part1(input: &str) -> String {
         })
         .max()
         .unwrap()
-        .to_string()
 }
 
-pub(super) fn part2(input: &str) -> String {
+pub fn part2(input: &str) -> i64 {
     let mut graph = UnGraphMap::new();
 
-    for (a, b, weight) in input.lines().map(|line| parse_line(line).unwrap().1) {
+    for (a, b, weight) in input.lines().map(|line| parse_line.parse(line).unwrap()) {
         if let Some(w) = graph.edge_weight_mut(a, b) {
             *w += weight;
         } else {
@@ -82,20 +78,15 @@ pub(super) fn part2(input: &str) -> String {
         })
         .max()
         .unwrap()
-        .to_string()
 }
 
-fn parse_line(input: &str) -> IResult<&str, (&str, &str, i64)> {
-    let (rest, (begin, sign, amount, end)) = tuple((
-        terminated(alpha1, tag(" would ")),
-        alt((value(1, tag("gain ")), value(-1, tag("lose ")))),
-        i64,
-        delimited(
-            tag(" happiness units by sitting next to "),
-            alpha1,
-            tag("."),
-        ),
-    ))(input)?;
-
-    Ok((rest, (begin, end, sign * amount)))
+fn parse_line<'a>(input: &mut &'a str) -> PResult<(&'a str, &'a str, i64)> {
+    (
+        terminated(alpha1, " would "),
+        alt(("gain ".value(1), "lose ".value(-1))),
+        dec_int,
+        delimited(" happiness units by sitting next to ", alpha1, "."),
+    )
+        .map(|(begin, sign, amount, end): (_, _, i64, _)| (begin, end, sign * amount))
+        .parse_next(input)
 }

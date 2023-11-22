@@ -1,5 +1,6 @@
-use std::{fs, io};
+use std::{fs, io, time::Instant};
 
+use arboard::Clipboard;
 use clap::Parser;
 use color_eyre::{eyre::WrapErr, Result};
 
@@ -21,23 +22,28 @@ struct Args {
 }
 
 fn main() -> Result<()> {
+    // Nice and colorful errors
     color_eyre::install()?;
+    // Get session cookie from env file
     dotenvy::dotenv()?;
+
+    let Args { year, day, part } = Args::parse();
 
     for file in FILES {
         fs::create_dir_all(file)?;
     }
 
-    let Args { year, day, part } = Args::parse();
-
     let input = get_problem(year, day)?;
 
     let result = match year {
-        2015 => aoc::y2015::solve(day, part, &input),
+        2015 => timing_fn(|| aoc::y2015::solve(day, part, &input)),
         _ => unimplemented!(),
     };
 
     println!("{result}");
+
+    Clipboard::new()?.set_text(result.to_string())?;
+
     Ok(())
 }
 
@@ -52,18 +58,22 @@ fn get_problem(year: u16, day: u8) -> Result<String> {
             return Err(e).wrap_err("couldn't access cached file")
         }
         // If file not found, continue
-        Err(_) => (),
+        Err(_) => {
+            // TODO: use tracing
+            eprintln!("file not in cache");
+        }
     };
 
-    // TODO: use tracing
-    println!("file not in cache");
-
     let session_cookie = std::env::var("AOC_SESSION")?;
+    let user_agent = std::env::var("USER_AGENT")?;
+
     let cookie = ureq::Cookie::new("session", session_cookie);
 
     let response = ureq::get(&format!("https://adventofcode.com/{year}/day/{day}/input"))
         .set("Cookie", &cookie.to_string())
-        .call()?
+        .set("User-Agent", &user_agent)
+        .call()
+        .wrap_err("maybe too soon")?
         .into_string()?;
 
     // Cache the file
@@ -72,7 +82,17 @@ fn get_problem(year: u16, day: u8) -> Result<String> {
     Ok(response)
 }
 
-const FILES: [&str; 8] = [
+fn timing_fn<T, F>(f: F) -> T
+where
+    F: Fn() -> T,
+{
+    let now = Instant::now();
+    let ret = f();
+    println!("Finished in {:?}", now.elapsed());
+    ret
+}
+
+const FILES: [&str; 9] = [
     "./files/2015",
     "./files/2016",
     "./files/2017",
@@ -81,4 +101,5 @@ const FILES: [&str; 8] = [
     "./files/2020",
     "./files/2021",
     "./files/2022",
+    "./files/2023",
 ];

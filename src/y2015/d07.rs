@@ -1,22 +1,26 @@
 use itertools::Itertools;
-use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{alpha1, u16},
-    combinator::map,
-    sequence::{preceded, separated_pair},
-    IResult,
-};
 use petgraph::{algo::toposort, prelude::DiGraphMap, Direction};
+use winnow::{
+    ascii::{alpha1, dec_uint},
+    combinator::{alt, preceded, separated_pair},
+    PResult, Parser,
+};
+
 use std::collections::HashMap;
 
-pub(super) fn part1(input: &str) -> String {
-    let circuit = DiGraphMap::from_edges(input.lines().flat_map(|line| parse(line).unwrap().1));
+pub fn part1(input: &str) -> u16 {
+    let circuit = DiGraphMap::from_edges(
+        input
+            .lines()
+            .flat_map(|line| parse_line.parse(line).unwrap()),
+    );
 
     let mut signals = HashMap::new();
 
     for curr_node in toposort(&circuit, None).unwrap() {
-        let Entry::Label(curr_label) = curr_node else { continue; };
+        let Entry::Label(curr_label) = curr_node else {
+            continue;
+        };
         let mut edges = circuit.edges_directed(curr_node, Direction::Incoming);
         let (prev_node_1, _, operation) = edges.next().unwrap();
         let prev_value_1 = match prev_node_1 {
@@ -30,7 +34,9 @@ pub(super) fn part1(input: &str) -> String {
             Operator::And1 => 1 & prev_value_1,
             Operator::Start => prev_value_1,
             Operator::And => {
-                let (prev_node_2, _, Operator::And) = edges.next().unwrap() else { unreachable!() };
+                let (prev_node_2, _, Operator::And) = edges.next().unwrap() else {
+                    unreachable!()
+                };
                 let prev_value_2 = match prev_node_2 {
                     Entry::Label(prev_label_2) => signals[prev_label_2],
                     Entry::Signal(prev_value_2) => prev_value_2,
@@ -38,7 +44,9 @@ pub(super) fn part1(input: &str) -> String {
                 prev_value_1 & prev_value_2
             }
             Operator::Or => {
-                let (prev_node_2, _, Operator::Or) = edges.next().unwrap() else { unreachable!() };
+                let (prev_node_2, _, Operator::Or) = edges.next().unwrap() else {
+                    unreachable!()
+                };
                 let prev_value_2 = match prev_node_2 {
                     Entry::Label(prev_label_2) => signals[prev_label_2],
                     Entry::Signal(prev_value_2) => prev_value_2,
@@ -49,11 +57,12 @@ pub(super) fn part1(input: &str) -> String {
         signals.insert(curr_label, curr_value);
     }
 
-    signals["a"].to_string()
+    signals["a"]
 }
 
-pub(super) fn part2(input: &str) -> String {
-    let part_1_result = part1(input) + " -> b";
+pub fn part2(input: &str) -> u16 {
+    let part1_str = part1(input).to_string();
+    let part_1_result = part1_str + " -> b";
     let new_input = input
         .lines()
         .map(|line| {
@@ -68,32 +77,21 @@ pub(super) fn part2(input: &str) -> String {
     part1(&new_input)
 }
 
-fn parse(input: &str) -> IResult<&str, Connection> {
-    let (rest, (input, output)) = separated_pair(
+fn parse_line<'a>(input: &mut &'a str) -> PResult<Connection<'a>> {
+    let (input, output) = separated_pair(
         alt((
-            map(preceded(tag("NOT "), entry), ConnectionInput::Not),
-            map(preceded(tag("1 AND "), entry), ConnectionInput::And1),
-            map(
-                separated_pair(entry, tag(" AND "), entry),
-                ConnectionInput::And,
-            ),
-            map(
-                separated_pair(entry, tag(" OR "), entry),
-                ConnectionInput::Or,
-            ),
-            map(
-                separated_pair(entry, tag(" LSHIFT "), u16),
-                ConnectionInput::LShift,
-            ),
-            map(
-                separated_pair(entry, tag(" RSHIFT "), u16),
-                ConnectionInput::RShift,
-            ),
-            map(entry, ConnectionInput::Start),
+            preceded("NOT ", entry).map(ConnectionInput::Not),
+            preceded("1 AND ", entry).map(ConnectionInput::And1),
+            separated_pair(entry, " AND ", entry).map(ConnectionInput::And),
+            separated_pair(entry, " OR ", entry).map(ConnectionInput::Or),
+            separated_pair(entry, " LSHIFT ", dec_uint).map(ConnectionInput::LShift),
+            separated_pair(entry, " RSHIFT ", dec_uint).map(ConnectionInput::RShift),
+            entry.map(ConnectionInput::Start),
         )),
-        tag(" -> "),
+        " -> ",
         entry,
-    )(input)?;
+    )
+    .parse_next(input)?;
 
     let mut conn = Connection::default();
 
@@ -123,11 +121,11 @@ fn parse(input: &str) -> IResult<&str, Connection> {
         }
     };
 
-    Ok((rest, conn))
+    Ok(conn)
 }
 
-fn entry(input: &str) -> IResult<&str, Entry> {
-    alt((map(u16, Entry::Signal), map(alpha1, Entry::Label)))(input)
+fn entry<'a>(input: &mut &'a str) -> PResult<Entry<'a>> {
+    alt((dec_uint.map(Entry::Signal), alpha1.map(Entry::Label))).parse_next(input)
 }
 
 #[derive(Debug)]

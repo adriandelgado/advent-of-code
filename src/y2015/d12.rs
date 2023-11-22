@@ -1,13 +1,13 @@
 use serde_json::Value;
 
-pub(super) fn part1(input: &str) -> String {
+pub fn part1(input: &str) -> i64 {
     let object: Value = serde_json::from_str(input).unwrap();
-    sum_numbers(&object).to_string()
+    sum_numbers(&object)
 }
 
-pub(super) fn part2(input: &str) -> String {
+pub fn part2(input: &str) -> i64 {
     let object: Value = serde_json::from_str(input).unwrap();
-    sum_numbers_no_red(&object).to_string()
+    sum_numbers_no_red(&object)
 }
 
 fn sum_numbers(object: &Value) -> i64 {

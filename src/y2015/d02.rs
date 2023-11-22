@@ -1,28 +1,24 @@
-use nom::{
-    bytes::complete::tag,
-    character::complete::{digit1, newline},
-    combinator::{map, map_res},
-    multi::fold_many1,
-    sequence::tuple,
-    IResult,
+use winnow::{
+    ascii::{dec_uint, newline},
+    combinator::{fold_repeat, terminated},
+    PResult, Parser,
 };
 
-pub(super) fn part1(input: &str) -> String {
-    fold_many1(
-        map(parse_line, wrapping_paper),
+pub fn part1(input: &str) -> u32 {
+    fold_repeat(
+        1..,
+        parse_line.map(wrapping_paper),
         || 0,
         |acc, item| acc + item,
-    )(input)
+    )
+    .parse(input)
     .unwrap()
-    .1
-    .to_string()
 }
 
-pub(super) fn part2(input: &str) -> String {
-    fold_many1(map(parse_line, ribbon), || 0, |acc, item| acc + item)(input)
+pub fn part2(input: &str) -> u32 {
+    fold_repeat(1.., parse_line.map(ribbon), || 0, |acc, item| acc + item)
+        .parse(input)
         .unwrap()
-        .1
-        .to_string()
 }
 
 fn wrapping_paper((num1, num2, num3): (u32, u32, u32)) -> u32 {
@@ -45,20 +41,8 @@ fn ribbon((num1, num2, num3): (u32, u32, u32)) -> u32 {
     ribbon_present + volume
 }
 
-fn parse_line(input: &str) -> IResult<&str, (u32, u32, u32)> {
-    map(
-        tuple((
-            parse_number,
-            tag("x"),
-            parse_number,
-            tag("x"),
-            parse_number,
-            newline,
-        )),
-        |(num1, _, num2, _, num3, _)| (num1, num2, num3),
-    )(input)
-}
-
-fn parse_number(input: &str) -> IResult<&str, u32> {
-    map_res(digit1, str::parse)(input)
+fn parse_line(input: &mut &str) -> PResult<(u32, u32, u32)> {
+    terminated((dec_uint, 'x', dec_uint, 'x', dec_uint), newline)
+        .map(|(num1, _, num2, _, num3)| (num1, num2, num3))
+        .parse_next(input)
 }

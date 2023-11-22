@@ -1,12 +1,8 @@
-pub(super) fn part1(input: &str) -> String {
-    input
-        .chars()
-        .map(|c| if c == '(' { 1 } else { -1 })
-        .sum::<i32>()
-        .to_string()
+pub fn part1(input: &str) -> i32 {
+    input.chars().map(|c| if c == '(' { 1 } else { -1 }).sum()
 }
 
-pub(super) fn part2(input: &str) -> String {
+pub fn part2(input: &str) -> usize {
     input
         .chars()
         .map(|c| if c == '(' { 1 } else { -1 })
@@ -17,5 +13,4 @@ pub(super) fn part2(input: &str) -> String {
         .position(|sum| sum == -1)
         .map(|pos| pos + 1)
         .unwrap()
-        .to_string()
 }
