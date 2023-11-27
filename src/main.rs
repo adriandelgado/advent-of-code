@@ -37,6 +37,7 @@ fn main() -> Result<()> {
 
     let result = match year {
         2015 => timing_fn(|| aoc::y2015::solve(day, part, &input)),
+        2021 => timing_fn(|| aoc::y2021::solve(day, part, &input)),
         _ => unimplemented!(),
     };
 
@@ -64,8 +65,8 @@ fn get_problem(year: u16, day: u8) -> Result<String> {
         }
     };
 
-    let session_cookie = std::env::var("AOC_SESSION")?;
-    let user_agent = std::env::var("USER_AGENT")?;
+    let session_cookie = std::env::var("AOC_SESSION").wrap_err("AOC_SESSION not found")?;
+    let user_agent = std::env::var("USER_AGENT").wrap_err("USER_AGENT not found")?;
 
     let cookie = ureq::Cookie::new("session", session_cookie);
 
@@ -88,7 +89,7 @@ where
 {
     let now = Instant::now();
     let ret = f();
-    println!("Finished in {:?}", now.elapsed());
+    eprintln!("Finished in {:?}", now.elapsed());
     ret
 }
 
