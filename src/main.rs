@@ -9,7 +9,7 @@ use color_eyre::{eyre::WrapErr, Result};
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Year of the problem
-    #[arg(value_parser = clap::value_parser!(u16).range(2015..=2022))]
+    #[arg(value_parser = clap::value_parser!(u16).range(2015..=2023))]
     year: u16,
 
     /// Day of the problem
@@ -38,6 +38,7 @@ fn main() -> Result<()> {
     let result = match year {
         2015 => timing_fn(|| aoc::y2015::solve(day, part, &input)),
         2021 => timing_fn(|| aoc::y2021::solve(day, part, &input)),
+        2023 => timing_fn(|| aoc::y2023::solve(day, part, &input)),
         _ => unimplemented!(),
     };
 
