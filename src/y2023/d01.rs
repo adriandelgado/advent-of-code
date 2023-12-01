@@ -47,15 +47,15 @@ fn extract_digit(line: &mut &str) -> PResult<u16> {
 
 fn extract_digit_spelled(line: &mut &str) -> PResult<u16> {
     alt((
-        "one".value(1_u16),
-        "two".value(2_u16),
-        "three".value(3_u16),
-        "four".value(4_u16),
-        "five".value(5_u16),
-        "six".value(6_u16),
-        "seven".value(7_u16),
-        "eight".value(8_u16),
-        "nine".value(9_u16),
+        "one".value(1),
+        "two".value(2),
+        "three".value(3),
+        "four".value(4),
+        "five".value(5),
+        "six".value(6),
+        "seven".value(7),
+        "eight".value(8),
+        "nine".value(9),
         take(1_usize).and_then(dec_uint),
     ))
     .parse_next(line)
