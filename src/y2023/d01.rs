@@ -3,12 +3,7 @@ use winnow::{ascii::dec_uint, combinator::alt, token::take, PResult, Parser};
 pub fn part1(input: &str) -> u16 {
     input
         .lines()
-        .map(|line| {
-            let line = line.trim_matches(|ch: char| !ch.is_ascii_digit());
-            let dec = (line.as_bytes()[0] - b'0') as u16;
-            let units = (line.as_bytes()[line.len() - 1] - b'0') as u16;
-            (dec, units)
-        })
+        .map(extract_digits::<true>)
         .map(|(dec, units)| dec * 10 + units)
         .sum()
 }
