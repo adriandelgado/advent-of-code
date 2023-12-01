@@ -19,6 +19,10 @@ struct Args {
     /// Part of the problem
     #[arg(value_parser = clap::value_parser!(u8).range(1..=2))]
     part: u8,
+
+    /// Disable clipboard
+    #[arg(short)]
+    no_clipboard: bool,
 }
 
 fn main() -> Result<()> {
@@ -27,7 +31,12 @@ fn main() -> Result<()> {
     // Get session cookie from env file
     dotenvy::dotenv()?;
 
-    let Args { year, day, part } = Args::parse();
+    let Args {
+        year,
+        day,
+        part,
+        no_clipboard,
+    } = Args::parse();
 
     for file in FILES {
         fs::create_dir_all(file)?;
@@ -44,7 +53,9 @@ fn main() -> Result<()> {
 
     println!("{result}");
 
-    Clipboard::new()?.set_text(result.to_string())?;
+    if !no_clipboard {
+        Clipboard::new()?.set_text(result.to_string())?;
+    }
 
     Ok(())
 }
