@@ -1,85 +1,62 @@
-use winnow::{
-    ascii::dec_int,
-    combinator::{alt, peek, rest, terminated},
-    token::take,
-    PResult, Parser,
-};
+use winnow::{ascii::dec_uint, combinator::alt, token::take, PResult, Parser};
 
-pub fn part1(input: &str) -> i64 {
+pub fn part1(input: &str) -> u16 {
     input
         .lines()
-        .map(|mut line| {
-            let (dec, units) = extract_digits_1(&mut line);
-            dec * 10 + units
-        })
+        .map(extract_digits::<true>)
+        .map(|(dec, units)| dec * 10 + units)
         .sum()
 }
 
-pub fn part2(input: &str) -> i64 {
+pub fn part2(input: &str) -> u16 {
     input
         .lines()
-        .map(|mut line| {
-            let (dec, units) = extract_digits_2(&mut line);
-            dec * 10 + units
-        })
+        .map(extract_digits::<false>)
+        .map(|(dec, units)| dec * 10 + units)
         .sum()
 }
 
-fn extract_digits_1(line: &mut &str) -> (i64, i64) {
+fn extract_digits<const PART_1: bool>(mut line: &str) -> (u16, u16) {
     let mut dec = None;
     let mut units = None;
 
     while !line.is_empty() {
-        if let Ok((_, num)) = extract_digit.parse_peek(line) {
+        let result = if PART_1 {
+            extract_digit.parse_peek(line)
+        } else {
+            extract_digit_spelled.parse_peek(line)
+        };
+
+        if let Ok((_, digit)) = result {
             if dec.is_none() {
-                dec = Some(num);
+                dec = Some(digit);
             } else {
-                units = Some(num);
+                units = Some(digit);
             }
         }
-        *line = &line[1..];
+
+        line = &line[1..];
     }
 
     (dec.unwrap(), units.or(dec).unwrap())
 }
 
-fn extract_digits_2(line: &mut &str) -> (i64, i64) {
-    let mut dec = None;
-    let mut units = None;
-
-    while !line.is_empty() {
-        if let Ok((_, num)) = extract_digit_complete.parse_peek(line) {
-            if dec.is_none() {
-                dec = Some(num);
-            } else {
-                units = Some(num);
-            }
-        }
-        *line = &line[1..];
-    }
-
-    (dec.unwrap(), units.or(dec).unwrap())
+fn extract_digit(line: &mut &str) -> PResult<u16> {
+    take(1_usize).and_then(dec_uint).parse_next(line)
 }
 
-fn extract_digit(line: &mut &str) -> PResult<i64> {
-    terminated(take(1_usize).and_then(dec_int), peek(rest)).parse_next(line)
-}
-
-fn extract_digit_complete(line: &mut &str) -> PResult<i64> {
-    terminated(
-        alt((
-            "one".value(1_i64),
-            "two".value(2_i64),
-            "three".value(3_i64),
-            "four".value(4_i64),
-            "five".value(5_i64),
-            "six".value(6_i64),
-            "seven".value(7_i64),
-            "eight".value(8_i64),
-            "nine".value(9_i64),
-            take(1_usize).and_then(dec_int),
-        )),
-        peek(rest),
-    )
+fn extract_digit_spelled(line: &mut &str) -> PResult<u16> {
+    alt((
+        "one".value(1_u16),
+        "two".value(2_u16),
+        "three".value(3_u16),
+        "four".value(4_u16),
+        "five".value(5_u16),
+        "six".value(6_u16),
+        "seven".value(7_u16),
+        "eight".value(8_u16),
+        "nine".value(9_u16),
+        take(1_usize).and_then(dec_uint),
+    ))
     .parse_next(line)
 }
