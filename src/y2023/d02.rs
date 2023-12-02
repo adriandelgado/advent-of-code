@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use winnow::{
     ascii::dec_uint,
@@ -29,33 +29,34 @@ pub fn part2(input: &str) -> u32 {
         .lines()
         .map(|line| extract_info.parse(line).unwrap())
         .map(|(_, games)| -> u32 {
-            let mut counter = HashMap::new();
+            let mut max_values = BTreeMap::new();
             for (num, cube) in games.into_iter().flatten() {
-                counter
+                max_values
                     .entry(cube)
                     .and_modify(|n| *n = num.max(*n))
                     .or_insert(num);
             }
-            counter.values().product()
+            max_values.values().product()
         })
         .sum()
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum Color {
     Red,
     Green,
     Blue,
 }
 
-fn extract_info(input: &mut &str) -> PResult<(u32, Vec<Vec<(u32, Color)>>)> {
-    let (_, game_id, _, games) =
-        ("Game ", dec_uint, ": ", separated(1.., game, "; ")).parse_next(input)?;
-
-    Ok((game_id, games))
+fn extract_info(input: &mut &str) -> PResult<(u32, Vec<Game>)> {
+    ("Game ", dec_uint, ": ", separated(1.., game, "; "))
+        .map(|(_, game_id, _, games)| (game_id, games))
+        .parse_next(input)
 }
 
-fn game(input: &mut &str) -> PResult<Vec<(u32, Color)>> {
+type Game = Vec<(u32, Color)>;
+
+fn game(input: &mut &str) -> PResult<Game> {
     separated(
         1..,
         separated_pair(
