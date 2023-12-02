@@ -13,24 +13,23 @@ pub fn part1(input: &str) -> u32 {
         .filter_map(|(game_id, games)| {
             games
                 .into_iter()
-                .all(|game| {
-                    game.into_iter().all(|(num, cube)| match cube {
-                        Color::Red => num <= 12,
-                        Color::Green => num <= 13,
-                        Color::Blue => num <= 14,
-                    })
+                .all(|(num, cube)| match cube {
+                    Color::Red => num <= 12,
+                    Color::Green => num <= 13,
+                    Color::Blue => num <= 14,
                 })
                 .then_some(game_id)
         })
         .sum()
 }
+
 pub fn part2(input: &str) -> u32 {
     input
         .lines()
         .map(|line| extract_info.parse(line).unwrap())
         .map(|(_, games)| -> u32 {
             let mut max_values = BTreeMap::new();
-            for (num, cube) in games.into_iter().flatten() {
+            for (num, cube) in games {
                 max_values
                     .entry(cube)
                     .and_modify(|n| *n = num.max(*n))
@@ -48,15 +47,13 @@ enum Color {
     Blue,
 }
 
-fn extract_info(input: &mut &str) -> PResult<(u32, Vec<Game>)> {
-    ("Game ", dec_uint, ": ", separated(1.., game, "; "))
+fn extract_info(input: &mut &str) -> PResult<(u32, Vec<(u32, Color)>)> {
+    ("Game ", dec_uint, ": ", games)
         .map(|(_, game_id, _, games)| (game_id, games))
         .parse_next(input)
 }
 
-type Game = Vec<(u32, Color)>;
-
-fn game(input: &mut &str) -> PResult<Game> {
+fn games(input: &mut &str) -> PResult<Vec<(u32, Color)>> {
     separated(
         1..,
         separated_pair(
@@ -68,7 +65,7 @@ fn game(input: &mut &str) -> PResult<Game> {
                 "blue".value(Color::Blue),
             )),
         ),
-        ", ",
+        alt((", ", "; ")),
     )
     .parse_next(input)
 }
