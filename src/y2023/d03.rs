@@ -1,11 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
-
 use atoi::FromRadix10;
-use winnow::{
-    ascii::digit1,
-    error::{ContextError, ErrMode},
-    Parser,
-};
 
 pub fn part1(input: &str) -> u32 {
     let modulo = input.find('\n').unwrap() + 1;
@@ -31,76 +24,71 @@ pub fn part1(input: &str) -> u32 {
 }
 
 fn has_adjacent_sym(len: usize, (row, col): (usize, usize), input: &[u8], modulo: usize) -> bool {
-    for surr_col in col.saturating_sub(1)..=(col + len).min(modulo - 2) {
-        if !matches!(
-            input[row.saturating_sub(1) * modulo + surr_col],
-            b'0'..=b'9' | b'.'
-        ) || !matches!(
-            input[((row + 1) * modulo).min(input.len() - modulo) + surr_col],
-            b'0'..=b'9' | b'.'
-        ) {
-            return true;
+    let min_row = row.saturating_sub(1);
+    let max_row = (row + 1).min((input.len() / modulo) - 1);
+    let min_col = col.saturating_sub(1);
+    let max_col = (col + len).min(modulo - 2);
+
+    for row in min_row..=max_row {
+        for col in min_col..=max_col {
+            if !matches!(input[row * modulo + col], b'0'..=b'9' | b'.') {
+                return true;
+            }
         }
     }
 
-    !matches!(
-        input[row * modulo + col.saturating_sub(1)],
-        b'0'..=b'9' | b'.'
-    ) || !matches!(
-        input[row * modulo + (col + len).min(modulo - 2)],
-        b'0'..=b'9' | b'.'
-    )
+    false
 }
 
 pub fn part2(input: &str) -> u32 {
-    let schematic: Vec<&str> = input.lines().collect();
-    let mut all_numbers = BTreeMap::new();
-    let mut maybe_gears = Vec::new();
+    let modulo = input.find('\n').unwrap() + 1;
 
-    for (row, line) in schematic.iter().enumerate() {
-        let mut col = 0;
-        while col < line.len() {
-            let slice = &line[col..];
-            if let Ok::<(&str, &str), ErrMode<ContextError>>((_, num)) = digit1.parse_peek(slice) {
-                for moving_col in col..(col + num.len()) {
-                    all_numbers.insert((row, moving_col), (num, (row, col)));
-                }
-                col += num.len();
-            } else {
-                col += 1;
-            }
-        }
-
-        for (col, ch) in line.chars().enumerate() {
-            match ch {
-                '*' => {
-                    maybe_gears.push((row, col));
-                }
-                _ => {}
-            }
-        }
-    }
-    maybe_gears
-        .into_iter()
-        .filter_map(|coords| has_2_adjacent_nums(coords, &all_numbers))
+    input
+        .lines()
+        .enumerate()
+        .flat_map(|(row, line)| {
+            line.as_bytes()
+                .iter()
+                .enumerate()
+                .filter(|(_, &ch)| (ch == b'*'))
+                .map(move |(col, _)| get_gear_ratio((row, col), input.as_bytes(), modulo))
+        })
         .sum()
 }
 
-fn has_2_adjacent_nums(
-    (x, y): (usize, usize),
-    all_numbers: &BTreeMap<(usize, usize), (&str, (usize, usize))>,
-) -> Option<u32> {
-    let mut nums = BTreeSet::new();
-    for y_coord in y.saturating_sub(1)..=(y + 1) {
-        for x_coord in x.saturating_sub(1)..=(x + 1) {
-            if let Some(&num_data) = all_numbers.get(&(x_coord, y_coord)) {
-                nums.insert(num_data);
-            }
+fn get_gear_ratio((row, col): (usize, usize), input: &[u8], modulo: usize) -> u32 {
+    let mut gear_ratio = 1;
+    let mut amount_of_parts = 0;
+
+    let min_row = row.saturating_sub(1);
+    let max_row = (row + 1).min((input.len() / modulo) - 1);
+
+    for row in min_row..=max_row {
+        let slice = &input[row * modulo..][..modulo - 1];
+        for num in get_numbers(slice, col) {
+            gear_ratio *= num;
+            amount_of_parts += 1;
         }
     }
-    (nums.len() == 2).then(|| {
-        nums.into_iter()
-            .map(|(num, _)| num.parse::<u32>().unwrap())
-            .product()
+
+    gear_ratio * u32::from(amount_of_parts == 2)
+}
+
+fn get_numbers(input: &[u8], col: usize) -> impl Iterator<Item = u32> + '_ {
+    let mut start = 0;
+    let min_col = col.saturating_sub(1);
+    let max_col = (col + 1).min(input.len() - 1);
+    std::iter::from_fn(move || {
+        while start <= max_col {
+            let (number, len) = u32::from_radix_10(&input[start..]);
+
+            if (min_col..=max_col).any(|c| (start..start + len).contains(&c)) {
+                start += len;
+                return Some(number);
+            }
+
+            start += len.max(1);
+        }
+        None
     })
 }
