@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use atoi::FromRadix10;
 use winnow::{
     ascii::digit1,
     error::{ContextError, ErrMode},
@@ -7,51 +8,48 @@ use winnow::{
 };
 
 pub fn part1(input: &str) -> u32 {
-    let schematic: Vec<&str> = input.lines().collect();
-    let mut all_numbers = Vec::new();
-    let mut symbols = BTreeSet::new();
+    let modulo = input.find('\n').unwrap() + 1;
 
-    for (row, line) in schematic.iter().enumerate() {
-        let mut col = 0;
-        while col < line.len() {
-            let slice = &line[col..];
-            if let Ok::<(&str, &str), ErrMode<ContextError>>((_, num)) = digit1.parse_peek(slice) {
-                all_numbers.push((num, (row, col)));
-                col += num.len();
-            } else {
-                col += 1;
-            }
-        }
-
-        for (col, ch) in line.chars().enumerate() {
-            match ch {
-                '0'..='9' | '.' => {}
-                _ => {
-                    symbols.insert((row, col));
+    input
+        .lines()
+        .enumerate()
+        .map(|(row, line)| {
+            let mut sum = 0;
+            let mut col = 0;
+            while col < line.len() {
+                let (number, len) = u32::from_radix_10(line[col..].as_bytes());
+                if len > 0 && has_adjacent_sym(len, (row, col), input.as_bytes(), modulo) {
+                    sum += number;
+                    col += len;
+                } else {
+                    col += 1;
                 }
             }
-        }
-    }
-    all_numbers
-        .into_iter()
-        .filter(|&(num_str, coords)| has_adjacent_sym(num_str, coords, &symbols))
-        .map(|(num_str, _)| num_str.parse::<u32>().unwrap())
+            sum
+        })
         .sum()
 }
 
-fn has_adjacent_sym(
-    num_str: &str,
-    (x, y): (usize, usize),
-    symbols: &BTreeSet<(usize, usize)>,
-) -> bool {
-    for y_coord in y.saturating_sub(1)..=(y + num_str.len()) {
-        for x_coord in x.saturating_sub(1)..=(x + 1) {
-            if symbols.contains(&(x_coord, y_coord)) {
-                return true;
-            }
+fn has_adjacent_sym(len: usize, (row, col): (usize, usize), input: &[u8], modulo: usize) -> bool {
+    for surr_col in col.saturating_sub(1)..=(col + len).min(modulo - 2) {
+        if !matches!(
+            input[row.saturating_sub(1) * modulo + surr_col],
+            b'0'..=b'9' | b'.'
+        ) || !matches!(
+            input[((row + 1) * modulo).min(input.len() - modulo) + surr_col],
+            b'0'..=b'9' | b'.'
+        ) {
+            return true;
         }
     }
-    false
+
+    !matches!(
+        input[row * modulo + col.saturating_sub(1)],
+        b'0'..=b'9' | b'.'
+    ) || !matches!(
+        input[row * modulo + (col + len).min(modulo - 2)],
+        b'0'..=b'9' | b'.'
+    )
 }
 
 pub fn part2(input: &str) -> u32 {
