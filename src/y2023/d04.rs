@@ -1,5 +1,3 @@
-use std::collections::BTreeSet;
-
 use winnow::{
     ascii::{dec_uint, space0, space1},
     combinator::{opt, preceded, separated, separated_pair},
@@ -12,13 +10,9 @@ pub fn part1(input: &str) -> u16 {
         .lines()
         .map(|line| extract_info.parse(line).unwrap())
         .map(|(have, winning)| {
-            let have = BTreeSet::from_iter(have);
-            let matching = winning.into_iter().filter(|w| have.contains(w)).count();
-            if matching == 0 {
-                0
-            } else {
-                1 << (matching - 1)
-            }
+            let matching = have.into_iter().filter(|h| winning.contains(h)).count();
+
+            1 << matching >> 1
         })
         .sum()
 }
@@ -28,8 +22,7 @@ pub fn part2(input: &str) -> usize {
         .lines()
         .map(|line| extract_info.parse(line).unwrap())
         .map(|(have, winning)| {
-            let have = BTreeSet::from_iter(have);
-            let matching = winning.into_iter().filter(|w| have.contains(w)).count();
+            let matching = have.into_iter().filter(|h| winning.contains(h)).count();
             (1, matching)
         })
         .collect();
