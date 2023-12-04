@@ -1,12 +1,13 @@
 use std::collections::BTreeSet;
 
 use winnow::{
-    ascii::{dec_uint, digit1, space1},
-    combinator::{preceded, separated, separated_pair},
+    ascii::{dec_uint, space0, space1},
+    combinator::{opt, preceded, separated, separated_pair},
+    token::take,
     PResult, Parser,
 };
 
-pub fn part1(input: &str) -> i64 {
+pub fn part1(input: &str) -> u16 {
     input
         .lines()
         .map(|line| extract_info.parse(line).unwrap())
@@ -37,8 +38,8 @@ pub fn part2(input: &str) -> usize {
 
     for idx in 0..cards.len() {
         let (amount, matching) = cards[idx];
-        for next_idx in (idx + 1)..(idx + 1 + matching) {
-            cards[next_idx].0 += amount;
+        for next_card in cards.iter_mut().skip(idx + 1).take(matching) {
+            next_card.0 += amount;
         }
     }
 
@@ -47,11 +48,11 @@ pub fn part2(input: &str) -> usize {
 
 fn extract_info(input: &mut &str) -> PResult<(Vec<u8>, Vec<u8>)> {
     preceded(
-        ("Card", space1, digit1, ":", space1),
+        (take(10_usize), opt(" ")),
         separated_pair(
-            separated(1.., dec_uint::<_, u8, _>, space1),
-            (space1, "|", space1),
-            separated(1.., dec_uint::<_, u8, _>, space1),
+            separated(10, dec_uint::<_, u8, _>, space1),
+            (" | ", space0),
+            separated(25, dec_uint::<_, u8, _>, space1),
         ),
     )
     .parse_next(input)
