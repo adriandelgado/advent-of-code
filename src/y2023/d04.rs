@@ -13,8 +13,7 @@ pub fn part1(input: &str) -> u16 {
         .map(|line| extract_info.parse(line).unwrap())
         .map(|(have, winning)| {
             let have = BTreeSet::from_iter(have);
-            let winning = BTreeSet::from_iter(winning);
-            let matching = have.intersection(&winning).count();
+            let matching = winning.into_iter().filter(|w| have.contains(w)).count();
             if matching == 0 {
                 0
             } else {
@@ -30,8 +29,7 @@ pub fn part2(input: &str) -> usize {
         .map(|line| extract_info.parse(line).unwrap())
         .map(|(have, winning)| {
             let have = BTreeSet::from_iter(have);
-            let winning = BTreeSet::from_iter(winning);
-            let matching = have.intersection(&winning).count();
+            let matching = winning.into_iter().filter(|w| have.contains(w)).count();
             (1, matching)
         })
         .collect();
