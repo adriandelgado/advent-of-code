@@ -25,8 +25,9 @@ pub fn part2(input: &str) -> usize {
 
 fn get_matching(input: &str) -> usize {
     let input = input.as_bytes();
-    let have = &input[9..][..30];
-    let winning = &input[41..][..75];
+    assert_eq!(input.len(), 116);
+    let have = &input[9..39];
+    let winning = &input[41..];
     let mut matching = 0;
     for h in have.chunks_exact(3) {
         for w in winning.chunks_exact(3) {
