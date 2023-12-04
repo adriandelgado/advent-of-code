@@ -1,30 +1,16 @@
-use winnow::{
-    ascii::{dec_uint, space0, space1},
-    combinator::{opt, preceded, separated, separated_pair},
-    token::take,
-    PResult, Parser,
-};
-
 pub fn part1(input: &str) -> u16 {
     input
         .lines()
-        .map(|line| extract_info.parse(line).unwrap())
-        .map(|(have, winning)| {
-            let matching = have.into_iter().filter(|h| winning.contains(h)).count();
-
-            1 << matching >> 1
-        })
+        .map(get_matching)
+        .map(|matching| 1 << matching >> 1)
         .sum()
 }
 
 pub fn part2(input: &str) -> usize {
     let mut cards: Vec<_> = input
         .lines()
-        .map(|line| extract_info.parse(line).unwrap())
-        .map(|(have, winning)| {
-            let matching = have.into_iter().filter(|h| winning.contains(h)).count();
-            (1, matching)
-        })
+        .map(get_matching)
+        .map(|matching| (1, matching))
         .collect();
 
     for idx in 0..cards.len() {
@@ -37,14 +23,15 @@ pub fn part2(input: &str) -> usize {
     cards.into_iter().map(|(amount, _)| amount).sum()
 }
 
-fn extract_info(input: &mut &str) -> PResult<(Vec<u8>, Vec<u8>)> {
-    preceded(
-        (take(10_usize), opt(" ")),
-        separated_pair(
-            separated(10, dec_uint::<_, u8, _>, space1),
-            (" | ", space0),
-            separated(25, dec_uint::<_, u8, _>, space1),
-        ),
-    )
-    .parse_next(input)
+fn get_matching(input: &str) -> usize {
+    let input = input.as_bytes();
+    let have = &input[9..][..30];
+    let winning = &input[41..][..75];
+    let mut matching = 0;
+    for h in have.chunks_exact(3) {
+        for w in winning.chunks_exact(3) {
+            matching += usize::from(h == w);
+        }
+    }
+    matching
 }
