@@ -7,20 +7,16 @@ pub fn part1(input: &str) -> u16 {
 }
 
 pub fn part2(input: &str) -> usize {
-    let mut cards: Vec<_> = input
-        .lines()
-        .map(get_matching)
-        .map(|matching| (1, matching))
-        .collect();
+    let mut cards: Vec<_> = input.lines().map(|_| 1).collect();
 
-    for idx in 0..cards.len() {
-        let (amount, matching) = cards[idx];
-        for next_card in cards.iter_mut().skip(idx + 1).take(matching) {
-            next_card.0 += amount;
-        }
+    for (idx, matching) in input.lines().map(get_matching).enumerate() {
+        let [amount, next_cards @ ..] = &mut cards[idx..=(idx + matching)] else {
+            unreachable!()
+        };
+        next_cards.iter_mut().for_each(|c| *c += *amount);
     }
 
-    cards.into_iter().map(|(amount, _)| amount).sum()
+    cards.into_iter().sum()
 }
 
 fn get_matching(input: &str) -> usize {
