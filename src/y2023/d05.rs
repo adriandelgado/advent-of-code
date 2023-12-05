@@ -35,21 +35,75 @@ fn do_the_mapping(current_out: u64, mapping: &[(Range<u64>, u64)]) -> u64 {
         })
 }
 
+// maybe could be faster
 pub fn part2(input: &str) -> u64 {
     let (seeds, mappings) = extract_info(input);
 
     seeds
         .chunks_exact(2)
-        .flat_map(|range| {
+        .map(|range| {
             let &[start, length] = range else {
                 unreachable!()
             };
 
             start..(start + length)
         })
-        .map(|seed| seed_to_location(seed, &mappings))
+        .map(|seed_range| seed_range_to_min_location(seed_range, &mappings))
         .min()
         .unwrap()
+}
+
+fn seed_range_to_min_location(seed_range: Range<u64>, mappings: &[Vec<(Range<u64>, u64)>]) -> u64 {
+    let mut current_out = vec![seed_range];
+    for mapping in mappings {
+        current_out = current_out
+            .into_iter()
+            .flat_map(|range| do_the_ranged_mapping(range, mapping))
+            .collect();
+    }
+    current_out.into_iter().flatten().min().unwrap()
+}
+
+fn do_the_ranged_mapping(
+    seed_range: Range<u64>,
+    mapping: &[(Range<u64>, u64)],
+) -> impl Iterator<Item = Range<u64>> + '_ {
+    let mut current_seed = seed_range.start;
+    std::iter::from_fn(move || {
+        while current_seed < seed_range.end {
+            match mapping.binary_search_by(|(source_r, _)| {
+                match source_r.start.cmp(&current_seed) {
+                    Ordering::Less if source_r.end.cmp(&current_seed) == Ordering::Greater => {
+                        Ordering::Equal
+                    }
+                    order => order,
+                }
+            }) {
+                Ok(location) => {
+                    let (source_r, destination) = &mapping[location];
+                    let shift = current_seed - source_r.start;
+                    let remaining = seed_range.end.min(source_r.end) - current_seed;
+                    current_seed += remaining;
+
+                    let destination_start = destination + shift;
+                    return Some(destination_start..(destination_start + remaining));
+                }
+                Err(missing) => {
+                    let destination_start = current_seed;
+                    let destination_end = mapping
+                        .get(missing)
+                        .map_or(seed_range.end, |(source_r, _)| {
+                            source_r.start.min(seed_range.end)
+                        });
+
+                    current_seed = destination_end;
+
+                    return Some(destination_start..destination_end);
+                }
+            }
+        }
+        None
+    })
 }
 
 // destination source range -> source..(source + range) destination
