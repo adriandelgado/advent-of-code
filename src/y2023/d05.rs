@@ -1,21 +1,45 @@
-use std::ops::Range;
+use std::{cmp::Ordering, ops::Range};
+
+use atoi::FromRadix10;
 
 pub fn part1(input: &str) -> u64 {
-    let (seeds, data) = extract_info(input);
+    let (seeds, mappings) = extract_info(input);
 
     seeds
         .into_iter()
-        .map(|seed| data.seed_to_location(seed))
+        .map(|seed| seed_to_location(seed, &mappings))
         .min()
         .unwrap()
 }
 
+fn seed_to_location(seed: u64, mappings: &[SortedMapping]) -> u64 {
+    let mut current_out = seed;
+    for mapping in mappings {
+        current_out = do_the_mapping(current_out, mapping);
+    }
+    current_out
+}
+
+fn do_the_mapping(current_out: u64, mapping: &[(Range<u64>, u64)]) -> u64 {
+    mapping
+        .binary_search_by(|(source_r, _)| match source_r.start.cmp(&current_out) {
+            Ordering::Less if source_r.end.cmp(&current_out) == Ordering::Greater => {
+                Ordering::Equal
+            }
+            order => order,
+        })
+        .map_or(current_out, |location| {
+            let (range, destination) = &mapping[location];
+            let shift = current_out - range.start;
+            destination + shift
+        })
+}
+
 pub fn part2(input: &str) -> u64 {
-    let (seeds, data) = extract_info(input);
+    let (seeds, mappings) = extract_info(input);
 
     seeds
         .chunks_exact(2)
-        .inspect(|_| println!("here"))
         .flat_map(|range| {
             let &[start, length] = range else {
                 unreachable!()
@@ -23,184 +47,45 @@ pub fn part2(input: &str) -> u64 {
 
             start..(start + length)
         })
-        .into_iter()
-        .map(|seed| data.seed_to_location(seed))
+        .map(|seed| seed_to_location(seed, &mappings))
         .min()
         .unwrap()
 }
 
-// destination source range
-
-fn extract_info(input: &str) -> (Vec<u64>, Data) {
-    let mut parts = input.split("\n\n");
-
-    let seeds = parts.next().unwrap()[7..]
+// destination source range -> source..(source + range) destination
+type SortedMapping = Vec<(Range<u64>, u64)>;
+fn extract_info(input: &str) -> (Vec<u64>, Vec<SortedMapping>) {
+    let (seeds, mappings) = input.split_once("\n\n").unwrap();
+    let seeds = seeds[7..]
         .split(' ')
-        .map(|seed| seed.parse::<u64>().unwrap())
+        .map(|seed| u64::from_radix_10(seed.as_bytes()).0)
         .collect();
 
-    let seed_to_soil = parts
-        .next()
-        .unwrap()
-        .split_once('\n')
-        .unwrap()
-        .1
-        .lines()
-        .map(|line| {
-            let mut nums = line.split(' ');
-            let dest = nums.next().unwrap().parse::<u64>().unwrap();
-            let source = nums.next().unwrap().parse::<u64>().unwrap();
-            let range = nums.next().unwrap().parse::<u64>().unwrap();
+    let mappings = mappings
+        .split("\n\n")
+        .map(|mapping| {
+            let mut mapping: Vec<_> = mapping
+                .split_once('\n')
+                .unwrap()
+                .1
+                .lines()
+                .map(|line| {
+                    let line = line.as_bytes();
+                    let (destination, next) = u64::from_radix_10(line);
+                    let line = &line[next + 1..];
+                    let (source, next) = u64::from_radix_10(line);
+                    let line = &line[next + 1..];
+                    let (range, _) = u64::from_radix_10(line);
 
-            (dest..(dest + range), source..(source + range))
+                    (source..(source + range), destination)
+                })
+                .collect();
+
+            mapping.sort_unstable_by_key(|(source_r, _)| source_r.start);
+
+            mapping
         })
         .collect();
 
-    let soil_to_fertilizer = parts
-        .next()
-        .unwrap()
-        .split_once('\n')
-        .unwrap()
-        .1
-        .lines()
-        .map(|line| {
-            let mut nums = line.split(' ');
-            let dest = nums.next().unwrap().parse::<u64>().unwrap();
-            let source = nums.next().unwrap().parse::<u64>().unwrap();
-            let range = nums.next().unwrap().parse::<u64>().unwrap();
-
-            (dest..(dest + range), source..(source + range))
-        })
-        .collect();
-
-    let fertilizer_to_water = parts
-        .next()
-        .unwrap()
-        .split_once('\n')
-        .unwrap()
-        .1
-        .lines()
-        .map(|line| {
-            let mut nums = line.split(' ');
-            let dest = nums.next().unwrap().parse::<u64>().unwrap();
-            let source = nums.next().unwrap().parse::<u64>().unwrap();
-            let range = nums.next().unwrap().parse::<u64>().unwrap();
-
-            (dest..(dest + range), source..(source + range))
-        })
-        .collect();
-
-    let water_to_light = parts
-        .next()
-        .unwrap()
-        .split_once('\n')
-        .unwrap()
-        .1
-        .lines()
-        .map(|line| {
-            let mut nums = line.split(' ');
-            let dest = nums.next().unwrap().parse::<u64>().unwrap();
-            let source = nums.next().unwrap().parse::<u64>().unwrap();
-            let range = nums.next().unwrap().parse::<u64>().unwrap();
-
-            (dest..(dest + range), source..(source + range))
-        })
-        .collect();
-
-    let light_to_temperature = parts
-        .next()
-        .unwrap()
-        .split_once('\n')
-        .unwrap()
-        .1
-        .lines()
-        .map(|line| {
-            let mut nums = line.split(' ');
-            let dest = nums.next().unwrap().parse::<u64>().unwrap();
-            let source = nums.next().unwrap().parse::<u64>().unwrap();
-            let range = nums.next().unwrap().parse::<u64>().unwrap();
-
-            (dest..(dest + range), source..(source + range))
-        })
-        .collect();
-
-    let temperature_to_humidity = parts
-        .next()
-        .unwrap()
-        .split_once('\n')
-        .unwrap()
-        .1
-        .lines()
-        .map(|line| {
-            let mut nums = line.split(' ');
-            let dest = nums.next().unwrap().parse::<u64>().unwrap();
-            let source = nums.next().unwrap().parse::<u64>().unwrap();
-            let range = nums.next().unwrap().parse::<u64>().unwrap();
-
-            (dest..(dest + range), source..(source + range))
-        })
-        .collect();
-
-    let humidity_to_location = parts
-        .next()
-        .unwrap()
-        .split_once('\n')
-        .unwrap()
-        .1
-        .lines()
-        .map(|line| {
-            let mut nums = line.split(' ');
-            let dest = nums.next().unwrap().parse::<u64>().unwrap();
-            let source = nums.next().unwrap().parse::<u64>().unwrap();
-            let range = nums.next().unwrap().parse::<u64>().unwrap();
-
-            (dest..(dest + range), source..(source + range))
-        })
-        .collect();
-
-    (
-        seeds,
-        Data {
-            seed_to_soil,
-            soil_to_fertilizer,
-            fertilizer_to_water,
-            water_to_light,
-            light_to_temperature,
-            temperature_to_humidity,
-            humidity_to_location,
-        },
-    )
-}
-
-// destination source range
-struct Data {
-    seed_to_soil: Vec<(Range<u64>, Range<u64>)>,
-    soil_to_fertilizer: Vec<(Range<u64>, Range<u64>)>,
-    fertilizer_to_water: Vec<(Range<u64>, Range<u64>)>,
-    water_to_light: Vec<(Range<u64>, Range<u64>)>,
-    light_to_temperature: Vec<(Range<u64>, Range<u64>)>,
-    temperature_to_humidity: Vec<(Range<u64>, Range<u64>)>,
-    humidity_to_location: Vec<(Range<u64>, Range<u64>)>,
-}
-
-impl Data {
-    fn seed_to_location(&self, seed: u64) -> u64 {
-        let soil = do_the_mapping(seed, &self.seed_to_soil);
-        let fertilizer = do_the_mapping(soil, &self.soil_to_fertilizer);
-        let water = do_the_mapping(fertilizer, &self.fertilizer_to_water);
-        let light = do_the_mapping(water, &self.water_to_light);
-        let temperature = do_the_mapping(light, &self.light_to_temperature);
-        let humidity = do_the_mapping(temperature, &self.temperature_to_humidity);
-        do_the_mapping(humidity, &self.humidity_to_location)
-    }
-}
-
-fn do_the_mapping(input: u64, map: &[(Range<u64>, Range<u64>)]) -> u64 {
-    for (dest, source) in map {
-        if source.contains(&input) {
-            let shift = input - source.start;
-            return dest.start + shift;
-        }
-    }
-    input
+    (seeds, mappings)
 }
