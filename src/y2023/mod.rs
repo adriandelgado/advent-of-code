@@ -5,6 +5,7 @@ mod d02;
 mod d03;
 mod d04;
 mod d05;
+mod d06;
 
 #[must_use]
 pub fn solve(day: u8, part: u8, input: &str) -> Box<dyn Display> {
@@ -19,6 +20,8 @@ pub fn solve(day: u8, part: u8, input: &str) -> Box<dyn Display> {
         (4, 2) => Box::new(d04::part2(input)),
         (5, 1) => Box::new(d05::part1(input)),
         (5, 2) => Box::new(d05::part2(input)),
+        (6, 1) => Box::new(d06::part1(input)),
+        (6, 2) => Box::new(d06::part2(input)),
         _ => unimplemented!(), // TODO: unreachable once completed
     }
 }
