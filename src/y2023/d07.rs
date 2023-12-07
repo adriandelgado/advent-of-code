@@ -5,8 +5,8 @@ pub fn solve<const PART_1: bool>(input: &str) -> u32 {
         .lines()
         .map(|line| parse_hand::<PART_1>.parse(line).unwrap())
         .map(|(cards, bid)| {
-            let t = CardType::from_cards::<PART_1>(cards);
-            (t, cards, bid)
+            let ty = CardType::from_cards::<PART_1>(cards);
+            (ty, cards, bid)
         })
         .collect();
 
@@ -37,21 +37,20 @@ enum CardType {
     FiveOfAKind,
 }
 
-const JOKER: usize = 1;
+const JOKER: usize = 0;
 
 impl CardType {
     fn from_cards<const PART_1: bool>(cards: [u8; 5]) -> Self {
-        let mut counter = [0; 15];
+        let mut counter = [0; 14];
 
         for card in cards {
             counter[card as usize] += 1;
         }
 
         if !PART_1 {
-            let joker_count = counter[JOKER];
+            let (_, max_card) = counter[1..].iter().zip(1..).max().unwrap();
+            counter[max_card] += counter[JOKER];
             counter[JOKER] = 0;
-            let (_, max_card) = counter.iter().zip(0..).max().unwrap();
-            counter[max_card] += joker_count;
         }
 
         let mut max_count = 1;
@@ -86,7 +85,7 @@ fn parse_hand<const PART_1: bool>(input: &mut &str) -> PResult<([u8; 5], u32)> {
 }
 
 fn parse_card<const PART_1: bool>(ch: u8) -> u8 {
-    match ch {
+    (match ch {
         b'A' => 14,
         b'K' => 13,
         b'Q' => 12,
@@ -99,5 +98,5 @@ fn parse_card<const PART_1: bool>(ch: u8) -> u8 {
         }
         b'T' => 10,
         digit => digit - b'0',
-    }
+    } - 1) // To start at 0, we shift down one unit
 }
