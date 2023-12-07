@@ -1,18 +1,11 @@
-use std::collections::BTreeMap;
+use winnow::{ascii::dec_uint, combinator::separated_pair, token::take, PResult, Parser};
 
-use winnow::{
-    ascii::dec_uint,
-    combinator::{alt, repeat, separated_pair},
-    token::take,
-    PResult, Parser,
-};
-
-pub fn part1(input: &str) -> u64 {
+pub fn solve<const PART_1: bool>(input: &str) -> u32 {
     let mut bets: Vec<_> = input
         .lines()
-        .map(|line| parse_cards::<true>.parse(line).unwrap())
+        .map(|line| parse_hands::<PART_1>.parse(line).unwrap())
         .map(|(cards, bid)| {
-            let t = get_type_of_hand(cards);
+            let t = CardType::from_cards::<PART_1>(cards);
             (t, cards, bid)
         })
         .collect();
@@ -25,27 +18,12 @@ pub fn part1(input: &str) -> u64 {
         .sum()
 }
 
-fn get_type_of_hand(cards: [u8; 5]) -> CardType {
-    let mut counter = BTreeMap::<u8, u8>::new();
+pub fn part1(input: &str) -> u32 {
+    solve::<true>(input)
+}
 
-    for card in cards {
-        counter.entry(card).and_modify(|c| *c += 1).or_insert(1);
-    }
-
-    match counter.len() {
-        1 => CardType::FiveOfAKind,
-        4 => CardType::OneAir,
-        5 => CardType::HighCard,
-        count => {
-            let max_count = *counter.values().max().unwrap();
-            match (count, max_count) {
-                (_, 4) => CardType::FourOfAKind,
-                (_, 2) => CardType::TwoPair,
-                (3, _) => CardType::ThreeOfAKind,
-                _ => CardType::FullHouse,
-            }
-        }
-    }
+pub fn part2(input: &str) -> u32 {
+    solve::<false>(input)
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -59,89 +37,67 @@ enum CardType {
     FiveOfAKind,
 }
 
-pub fn part2(input: &str) -> u64 {
-    let mut bets: Vec<_> = input
-        .lines()
-        .map(|line| parse_cards::<false>.parse(line).unwrap())
-        .map(|(cards, bid)| {
-            let t = get_type_of_hand_jokers(cards);
-            (t, cards, bid)
-        })
-        .collect();
+const JOKER: usize = 1;
 
-    bets.sort_unstable();
+impl CardType {
+    fn from_cards<const PART_1: bool>(cards: [u8; 5]) -> Self {
+        let mut counter = [0; 15];
 
-    bets.into_iter()
-        .zip(1..)
-        .map(|((_, _, bid), rank)| rank * bid)
-        .sum()
-}
-
-fn get_type_of_hand_jokers(cards: [u8; 5]) -> CardType {
-    // check if not jokers
-    if !cards.contains(&1) {
-        return get_type_of_hand(cards);
-    }
-    let mut counter = BTreeMap::<u8, u8>::new();
-
-    for card in cards {
-        counter.entry(card).and_modify(|c| *c += 1).or_insert(1);
-    }
-
-    let joker_count = counter.remove(&1).unwrap();
-
-    if joker_count >= 4 {
-        return CardType::FiveOfAKind;
-    }
-
-    let (max_count, max_card) = counter
-        .iter()
-        .map(|(&card, &count)| (count, card))
-        .max()
-        .unwrap();
-
-    if joker_count == 3 {
-        if max_count == 2 {
-            return CardType::FiveOfAKind;
-        } else {
-            return CardType::FourOfAKind;
+        for card in cards {
+            counter[card as usize] += 1;
         }
-    }
 
-    *counter.get_mut(&max_card).unwrap() += joker_count;
+        if !PART_1 {
+            let joker_count = counter[JOKER];
+            counter[JOKER] = 0;
+            let (_, max_card) = counter.iter().zip(0..).max().unwrap();
+            counter[max_card] += joker_count;
+        }
 
-    match counter.len() {
-        1 => CardType::FiveOfAKind,
-        4 => CardType::OneAir,
-        5 => unreachable!(),
-        count => {
-            let max_count = *counter.values().max().unwrap();
-            match (count, max_count) {
-                (_, 4) => CardType::FourOfAKind,
-                (_, 2) => CardType::TwoPair,
-                (3, _) => CardType::ThreeOfAKind,
-                _ => CardType::FullHouse,
-            }
+        let mut max_count = 1;
+        let mut different_cards = 0;
+        for count in counter {
+            different_cards += u8::from(count != 0);
+            max_count = max_count.max(count);
+        }
+
+        match 4 + max_count - different_cards {
+            0 => Self::HighCard,
+            2 => Self::OneAir,
+            3 => Self::TwoPair,
+            4 => Self::ThreeOfAKind,
+            5 => Self::FullHouse,
+            6 => Self::FourOfAKind,
+            _ => Self::FiveOfAKind,
         }
     }
 }
 
-fn parse_cards<const PART_1: bool>(input: &mut &str) -> PResult<([u8; 5], u64)> {
+fn parse_hands<const PART_1: bool>(input: &mut &str) -> PResult<([u8; 5], u32)> {
     separated_pair(
-        repeat(
-            5,
-            take(1_usize).and_then(alt((
-                dec_uint,
-                'A'.value(14),
-                'K'.value(13),
-                'Q'.value(12),
-                'J'.value(if PART_1 { 11 } else { 1 }),
-                'T'.value(10),
-            ))),
-        )
-        .map(|vec: Vec<u8>| vec.try_into().unwrap()),
+        take(5_usize).map(|cards: &str| {
+            assert_eq!(cards.len(), 5);
+            std::array::from_fn(|idx| parse_card::<PART_1>(cards.as_bytes()[idx]))
+        }),
         ' ',
         dec_uint,
     )
     .parse_next(input)
+}
+
+fn parse_card<const PART_1: bool>(ch: u8) -> u8 {
+    match ch {
+        b'A' => 14,
+        b'K' => 13,
+        b'Q' => 12,
+        b'J' => {
+            if PART_1 {
+                11
+            } else {
+                1
+            }
+        }
+        b'T' => 10,
+        digit => digit - b'0',
+    }
 }
