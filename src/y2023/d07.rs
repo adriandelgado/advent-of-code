@@ -3,7 +3,7 @@ use winnow::{ascii::dec_uint, combinator::separated_pair, token::take, PResult, 
 pub fn solve<const PART_1: bool>(input: &str) -> u32 {
     let mut bets: Vec<_> = input
         .lines()
-        .map(|line| parse_hands::<PART_1>.parse(line).unwrap())
+        .map(|line| parse_hand::<PART_1>.parse(line).unwrap())
         .map(|(cards, bid)| {
             let t = CardType::from_cards::<PART_1>(cards);
             (t, cards, bid)
@@ -73,7 +73,7 @@ impl CardType {
     }
 }
 
-fn parse_hands<const PART_1: bool>(input: &mut &str) -> PResult<([u8; 5], u32)> {
+fn parse_hand<const PART_1: bool>(input: &mut &str) -> PResult<([u8; 5], u32)> {
     separated_pair(
         take(5_usize).map(|cards: &str| {
             assert_eq!(cards.len(), 5);
