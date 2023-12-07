@@ -5,7 +5,7 @@ pub fn solve<const PART_1: bool>(input: &str) -> u32 {
         .lines()
         .map(|line| parse_hand::<PART_1>.parse(line).unwrap())
         .map(|(cards, bid)| {
-            let ty = CardType::from_cards::<PART_1>(cards);
+            let ty = HandType::from_cards::<PART_1>(cards);
             (ty, cards, bid)
         })
         .collect();
@@ -27,7 +27,7 @@ pub fn part2(input: &str) -> u32 {
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-enum CardType {
+enum HandType {
     HighCard,
     OneAir,
     TwoPair,
@@ -37,7 +37,7 @@ enum CardType {
     FiveOfAKind,
 }
 
-impl CardType {
+impl HandType {
     fn from_cards<const PART_1: bool>(cards: [u8; 5]) -> Self {
         let mut counter = [0; 14];
 
