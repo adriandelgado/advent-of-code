@@ -37,8 +37,6 @@ enum CardType {
     FiveOfAKind,
 }
 
-const JOKER: usize = 0;
-
 impl CardType {
     fn from_cards<const PART_1: bool>(cards: [u8; 5]) -> Self {
         let mut counter = [0; 14];
@@ -47,10 +45,10 @@ impl CardType {
             counter[card as usize] += 1;
         }
 
+        let [joker_count, mut counter @ ..] = counter;
+
         if !PART_1 {
-            let (_, max_card) = counter[1..].iter().zip(1..).max().unwrap();
-            counter[max_card] += counter[JOKER];
-            counter[JOKER] = 0;
+            *counter.iter_mut().max().unwrap() += joker_count;
         }
 
         let mut max_count = 1;
