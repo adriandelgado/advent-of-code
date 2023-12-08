@@ -53,9 +53,24 @@ pub fn part2(input: &str) -> u64 {
         }
         cycles.push(count);
     }
-    // wolfram alpha
-    println!("{cycles:?}");
-    12357789728873
+    cycles.into_iter().fold(1, lcm)
+}
+
+fn gcd(mut a: u64, mut b: u64) -> u64 {
+    if a == b {
+        return a;
+    }
+    if b > a {
+        (a, b) = (b, a);
+    }
+    while b > 0 {
+        (a, b) = (b, a % b);
+    }
+    a
+}
+
+fn lcm(a: u64, b: u64) -> u64 {
+    a / gcd(a, b) * b
 }
 
 #[derive(Debug, Clone, Copy)]
