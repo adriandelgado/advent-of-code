@@ -1,23 +1,27 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
-use winnow::{token::take, PResult, Parser};
+use winnow::{
+    combinator::{delimited, rest, separated, separated_pair, terminated},
+    token::{take, take_till1},
+    PResult, Parser,
+};
 
-pub fn part1(input: &str) -> u64 {
-    let (instructions, network) = extract_info(input);
+const AAA: u16 = node_to_u16(b"AAA");
+const ZZZ: u16 = node_to_u16(b"ZZZ");
 
-    let network: BTreeMap<&str, (&str, &str)> =
-        network.into_iter().map(|(a, b, c)| (a, (b, c))).collect();
+pub fn part1(input: &str) -> u16 {
+    let (instructions, network) = extract_info.parse(input.as_bytes()).unwrap();
 
     let mut count = 0;
-    let mut current = "AAA";
-    for instruction in instructions.into_iter().cycle() {
-        let (left, right) = network[current];
+    let mut current = AAA;
+    for instruction in instructions.iter().cycle() {
+        let (left, right) = network[&current];
         match instruction {
-            Dir::Left => current = left,
-            Dir::Right => current = right,
+            b'L' => current = left,
+            _ => current = right,
         }
         count += 1;
-        if current == "ZZZ" {
+        if current == ZZZ {
             break;
         }
     }
@@ -25,35 +29,26 @@ pub fn part1(input: &str) -> u64 {
 }
 
 pub fn part2(input: &str) -> u64 {
-    let (instructions, network) = extract_info(input);
+    let (instructions, network) = extract_info.parse(input.as_bytes()).unwrap();
 
-    let network: BTreeMap<&str, (&str, &str)> =
-        network.into_iter().map(|(a, b, c)| (a, (b, c))).collect();
-
-    let current: Vec<_> = network
-        .keys()
-        .copied()
-        .filter(|node| node.ends_with('A'))
-        .collect();
-
-    let mut cycles = Vec::new();
-    for &curr in &current {
+    let mut lcm_out = 1;
+    for curr in network.keys().copied().filter(|node| node % 26 == 0) {
         let mut count = 0;
         let mut current = curr;
         for instruction in instructions.iter().cycle() {
-            let (left, right) = network[current];
+            let (left, right) = network[&current];
             match instruction {
-                Dir::Left => current = left,
-                Dir::Right => current = right,
+                b'L' => current = left,
+                _ => current = right,
             }
             count += 1;
-            if current.ends_with('Z') {
+            if current % 26 == 25 {
                 break;
             }
         }
-        cycles.push(count);
+        lcm_out = lcm(lcm_out, count);
     }
-    cycles.into_iter().fold(1, lcm)
+    lcm_out
 }
 
 fn gcd(mut a: u64, mut b: u64) -> u64 {
@@ -73,37 +68,40 @@ fn lcm(a: u64, b: u64) -> u64 {
     a / gcd(a, b) * b
 }
 
-#[derive(Debug, Clone, Copy)]
-enum Dir {
-    Left,
-    Right,
-}
+type Pair = (u16, u16);
 
-fn extract_info(input: &str) -> (Vec<Dir>, Vec<(&str, &str, &str)>) {
-    let (instructions, network) = input.split_once("\n\n").unwrap();
-
-    let instructions = instructions
-        .bytes()
-        .map(|ch| if ch == b'L' { Dir::Left } else { Dir::Right })
-        .collect();
-
-    let network = network
-        .lines()
-        .map(|line| parse_equals.parse(line).unwrap())
-        .collect();
-
-    (instructions, network)
-}
-
-fn parse_equals<'a>(input: &mut &'a str) -> PResult<(&'a str, &'a str, &'a str)> {
-    (
-        take(3_usize),
-        " = (",
-        take(3_usize),
-        ", ",
-        take(3_usize),
-        ")",
+fn extract_info<'a>(input: &mut &'a [u8]) -> PResult<(&'a [u8], HashMap<u16, Pair>)> {
+    terminated(
+        separated_pair(take_till1(b'\n'), b"\n\n", separated(1.., node, b'\n')),
+        rest,
     )
-        .map(|(a, _, b, _, c, _)| (a, b, c))
-        .parse_next(input)
+    .parse_next(input)
+}
+
+fn node(input: &mut &[u8]) -> PResult<(u16, Pair)> {
+    separated_pair(
+        take(3_usize).map(node_to_u16),
+        b" = ",
+        delimited(
+            b'(',
+            separated_pair(
+                take(3_usize).map(node_to_u16),
+                b", ",
+                take(3_usize).map(node_to_u16),
+            ),
+            b')',
+        ),
+    )
+    .parse_next(input)
+}
+
+const fn node_to_u16(input: &[u8]) -> u16 {
+    if let &[c, d, u] = input {
+        let c = (c - b'A') as u16;
+        let d = (d - b'A') as u16;
+        let u = (u - b'A') as u16;
+        u + d * 26 + c * 26 * 26
+    } else {
+        0
+    }
 }
