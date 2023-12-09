@@ -1,20 +1,11 @@
 use atoi::FromRadix10Signed;
 
-fn get_nums<const REVERSE: bool>(line: &str) -> Vec<i32> {
-    if REVERSE {
-        line.split(' ')
-            .rev()
-            .map(|n| i32::from_radix_10_signed(n.as_bytes()).0)
-            .collect()
-    } else {
-        line.split(' ')
-            .map(|n| i32::from_radix_10_signed(n.as_bytes()).0)
-            .collect()
-    }
-}
-
 pub fn part1(input: &str) -> i32 {
     input.lines().map(get_nums::<false>).map(extrapolate).sum()
+}
+
+pub fn part2(input: &str) -> i32 {
+    input.lines().map(get_nums::<true>).map(extrapolate).sum()
 }
 
 fn extrapolate(mut last_diff: Vec<i32>) -> i32 {
@@ -31,6 +22,15 @@ fn extrapolate(mut last_diff: Vec<i32>) -> i32 {
     sum
 }
 
-pub fn part2(input: &str) -> i32 {
-    input.lines().map(get_nums::<true>).map(extrapolate).sum()
+fn get_nums<const REVERSE: bool>(line: &str) -> Vec<i32> {
+    if REVERSE {
+        line.split(' ')
+            .rev()
+            .map(|n| i32::from_radix_10_signed(n.as_bytes()).0)
+            .collect()
+    } else {
+        line.split(' ')
+            .map(|n| i32::from_radix_10_signed(n.as_bytes()).0)
+            .collect()
+    }
 }
