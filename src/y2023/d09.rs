@@ -1,63 +1,36 @@
-pub fn part1(input: &str) -> i64 {
-    input
-        .lines()
-        .map(|line| {
-            extrapolate(
-                line.split(' ')
-                    .map(|n| n.parse::<i64>().unwrap())
-                    .collect::<Vec<_>>(),
-            )
-        })
-        .sum()
+use atoi::FromRadix10Signed;
+
+fn get_nums<const REVERSE: bool>(line: &str) -> Vec<i32> {
+    if REVERSE {
+        line.split(' ')
+            .rev()
+            .map(|n| i32::from_radix_10_signed(n.as_bytes()).0)
+            .collect()
+    } else {
+        line.split(' ')
+            .map(|n| i32::from_radix_10_signed(n.as_bytes()).0)
+            .collect()
+    }
 }
 
-fn extrapolate(nums: Vec<i64>) -> i64 {
-    let mut differences: Vec<Vec<i64>> = vec![nums];
+pub fn part1(input: &str) -> i32 {
+    input.lines().map(get_nums::<false>).map(extrapolate).sum()
+}
 
-    while !differences.last().unwrap().iter().all(|&d| d == 0) {
-        let deltas: Vec<i64> = differences
-            .last()
-            .unwrap()
-            .windows(2)
-            .map(|pair| pair[1] - pair[0])
-            .collect();
+fn extrapolate(mut last_diff: Vec<i32>) -> i32 {
+    let mut sum = last_diff.last().copied().unwrap();
 
-        differences.push(deltas);
+    while last_diff.iter().any(|&d| d != 0) {
+        for i in 1..last_diff.len() {
+            last_diff[i - 1] = last_diff[i] - last_diff[i - 1];
+        }
+        last_diff.pop();
+        sum += last_diff.last().copied().unwrap();
     }
 
-    differences.into_iter().map(|d| *d.last().unwrap()).sum()
+    sum
 }
 
-pub fn part2(input: &str) -> i64 {
-    input
-        .lines()
-        .map(|line| {
-            extrapolate_2(
-                line.split(' ')
-                    .map(|n| n.parse::<i64>().unwrap())
-                    .collect::<Vec<_>>(),
-            )
-        })
-        .sum()
-}
-
-fn extrapolate_2(nums: Vec<i64>) -> i64 {
-    let mut differences: Vec<Vec<i64>> = vec![nums];
-
-    while !differences.last().unwrap().iter().all(|&d| d == 0) {
-        let deltas: Vec<i64> = differences
-            .last()
-            .unwrap()
-            .windows(2)
-            .map(|pair| pair[1] - pair[0])
-            .collect();
-
-        differences.push(deltas);
-    }
-
-    differences
-        .into_iter()
-        .zip([1, -1].into_iter().cycle())
-        .map(|(d, sign)| *d.first().unwrap() * sign)
-        .sum()
+pub fn part2(input: &str) -> i32 {
+    input.lines().map(get_nums::<true>).map(extrapolate).sum()
 }
