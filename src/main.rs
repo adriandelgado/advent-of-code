@@ -1,4 +1,4 @@
-use std::{fs, io, time::Instant};
+use std::{fs, io};
 
 use arboard::Clipboard;
 use clap::Parser;
@@ -45,9 +45,9 @@ fn main() -> Result<()> {
     let input = get_problem(year, day)?;
 
     let result = match year {
-        2015 => timing_fn(|| aoc::y2015::solve(day, part, &input)),
-        2021 => timing_fn(|| aoc::y2021::solve(day, part, &input)),
-        2023 => timing_fn(|| aoc::y2023::solve(day, part, &input)),
+        2015 => aoc::y2015::solve(day, part, &input),
+        2021 => aoc::y2021::solve(day, part, &input),
+        2023 => aoc::y2023::solve(day, part, &input),
         _ => unimplemented!(),
     };
 
@@ -93,16 +93,6 @@ fn get_problem(year: u16, day: u8) -> Result<String> {
     fs::write(file_path, &response)?;
 
     Ok(response)
-}
-
-fn timing_fn<T, F>(f: F) -> T
-where
-    F: Fn() -> T,
-{
-    let now = Instant::now();
-    let ret = f();
-    eprintln!("Finished in {:?}", now.elapsed());
-    ret
 }
 
 const FILES: [&str; 9] = [
