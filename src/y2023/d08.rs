@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use winnow::{
     combinator::{delimited, rest, separated, separated_pair, terminated},
-    token::{take, take_till1},
+    token::{take, take_till},
     PResult, Parser,
 };
 
@@ -72,7 +72,7 @@ type Pair = (u16, u16);
 
 fn extract_info<'a>(input: &mut &'a [u8]) -> PResult<(&'a [u8], HashMap<u16, Pair>)> {
     terminated(
-        separated_pair(take_till1(b'\n'), b"\n\n", separated(1.., node, b'\n')),
+        separated_pair(take_till(1.., b'\n'), b"\n\n", separated(1.., node, b'\n')),
         rest,
     )
     .parse_next(input)

@@ -2,7 +2,7 @@ use bstr::B;
 use winnow::{
     ascii::{escaped_transform, hex_uint},
     combinator::{alt, delimited, preceded},
-    token::{take, take_till1},
+    token::{take, take_till},
     PResult, Parser,
 };
 
@@ -28,7 +28,7 @@ fn parse_line(input: &mut &[u8]) -> PResult<Vec<u8>> {
         b'"',
         escaped_transform(
             // TODO: PR to winnow documentation: must match at least 1 char
-            take_till1(b"\\\""),
+            take_till(1.., b"\\\""),
             '\\',
             alt((
                 b'\\'.value(B(b"\\")),

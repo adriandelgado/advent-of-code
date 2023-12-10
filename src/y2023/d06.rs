@@ -1,7 +1,7 @@
 use atoi::FromRadix10;
 use winnow::{
     combinator::{preceded, rest, separated_pair, terminated},
-    token::{take, take_till1},
+    token::{take, take_till},
     PResult, Parser,
 };
 
@@ -42,9 +42,9 @@ fn amount_ways_beating((t, d): (u64, u64)) -> u32 {
 fn parse_time_distance<'a>(input: &mut &'a str) -> PResult<(&'a str, &'a str)> {
     terminated(
         separated_pair(
-            preceded(take(13_usize), take_till1('\n')),
+            preceded(take(13_usize), take_till(1.., '\n')),
             '\n',
-            preceded(take(12_usize), take_till1('\n')),
+            preceded(take(12_usize), take_till(1.., '\n')),
         ),
         rest,
     )
