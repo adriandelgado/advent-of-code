@@ -47,12 +47,10 @@ fn count_possible_arrangements(
 
             out1 + out2
         }
-        [b'#', ..] => {
-            let &[first_group, ref rest_groups @ ..] = groups_damaged else {
-                unreachable!(
-                    "we check if `rest_groups` is empty so `groups_damaged` always has elements"
-                )
-            };
+        [_should_be_hash, ..] => {
+            let (&first_group, rest_groups) = groups_damaged.split_first().expect(
+                "we check if `rest_groups` is empty so `groups_damaged` always has elements",
+            );
             if first_group > given_springs.len() {
                 return 0;
             }
@@ -71,7 +69,6 @@ fn count_possible_arrangements(
                 out
             }
         }
-        [_other, ..] => unreachable!(),
     }
 }
 
