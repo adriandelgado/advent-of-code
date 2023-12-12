@@ -4,35 +4,41 @@ use bstr::ByteSlice;
 
 pub fn part1(input: &str) -> usize {
     let mut memoize = HashMap::new();
-    input
-        .lines()
-        .map(extract_info)
+    let info: Vec<_> = input.lines().map(extract_info).collect();
+
+    info.iter()
         .map(|(given_springs, groups_damaged)| {
-            count_possible_arrangements((given_springs, &groups_damaged), &mut memoize)
+            count_possible_arrangements((given_springs, groups_damaged), &mut memoize)
         })
         .sum()
 }
 
 pub fn part2(input: &str) -> usize {
     let mut memoize = HashMap::new();
-    input
+    let info: Vec<_> = input
         .lines()
         .map(extract_info)
         .map(|(given_springs, groups_damaged)| {
-            let new_springs = [given_springs; 5].join(&b'?');
-            let new_groups_damaged = [groups_damaged.as_slice(); 5].concat();
+            (
+                [given_springs; 5].join(&b'?'),
+                [groups_damaged.as_slice(); 5].concat(),
+            )
+        })
+        .collect();
 
-            count_possible_arrangements((&new_springs, &new_groups_damaged), &mut memoize)
+    info.iter()
+        .map(|(given_springs, groups_damaged)| {
+            count_possible_arrangements((given_springs, groups_damaged), &mut memoize)
         })
         .sum()
 }
 
-fn count_possible_arrangements(
-    (given_springs, groups_damaged): (&[u8], &[usize]),
-    memoize: &mut HashMap<(Vec<u8>, Vec<usize>), usize>,
+fn count_possible_arrangements<'a>(
+    (given_springs, groups_damaged): (&[u8], &'a [usize]),
+    memoize: &mut HashMap<(Vec<u8>, &'a [usize]), usize>,
 ) -> usize {
     let given_springs = given_springs.trim_with(|ch| ch == '.');
-    if let Some(&out) = memoize.get(&(given_springs.to_vec(), groups_damaged.to_vec())) {
+    if let Some(&out) = memoize.get(&(given_springs.to_vec(), groups_damaged)) {
         return out;
     }
     match given_springs {
@@ -40,10 +46,10 @@ fn count_possible_arrangements(
         [b'?', rest @ ..] => {
             let given_springs = [b"#", rest].concat();
             let out1 = count_possible_arrangements((&given_springs, groups_damaged), memoize);
-            memoize.insert((given_springs.clone(), groups_damaged.to_vec()), out1);
+            memoize.insert((given_springs.clone(), groups_damaged), out1);
 
             let out2 = count_possible_arrangements((rest, groups_damaged), memoize);
-            memoize.insert((rest.to_vec(), groups_damaged.to_vec()), out2);
+            memoize.insert((rest.to_vec(), groups_damaged), out2);
 
             out1 + out2
         }
@@ -65,7 +71,7 @@ fn count_possible_arrangements(
                     return 0;
                 };
                 let out = count_possible_arrangements((rest_springs, rest_groups), memoize);
-                memoize.insert((rest_springs.to_vec(), rest_groups.to_vec()), out);
+                memoize.insert((rest_springs.to_vec(), rest_groups), out);
                 out
             }
         }
