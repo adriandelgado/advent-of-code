@@ -1,141 +1,77 @@
 use std::collections::HashMap;
 
 use bstr::ByteSlice;
-use itertools::Itertools;
 
 pub fn part1(input: &str) -> usize {
+    let mut memoize = HashMap::new();
     input
         .lines()
-        .enumerate()
-        .map(|(n, line)| {
-            println!("{n}");
-            line
-        })
         .map(extract_info)
-        .map(count_possible_arrangements)
+        .map(|(given_springs, groups_damaged)| {
+            count_possible_arrangements((given_springs, &groups_damaged), &mut memoize)
+        })
         .sum()
-}
-
-fn count_possible_arrangements((given_springs, groups_damaged): (&[u8], Vec<usize>)) -> usize {
-    let num_damaged: usize = groups_damaged.iter().sum();
-    let clumps_damaged = groups_damaged.len();
-    let total_springs = given_springs.len();
-    let fixed_functional = groups_damaged.len() - 1;
-    let flexible_functional = total_springs - num_damaged - fixed_functional;
-    let all_idxs: Vec<_> = (0..(flexible_functional + clumps_damaged)).collect();
-
-    let mut possible = 0;
-    for damaged_idxs in all_idxs.into_iter().combinations(clumps_damaged) {
-        let mut possible_springs = (0..(flexible_functional + clumps_damaged))
-            .map(|idx| {
-                if damaged_idxs.contains(&idx) {
-                    b'#'
-                } else {
-                    b'.'
-                }
-            })
-            .collect_vec();
-        for (idx, &amount) in std::iter::zip(damaged_idxs, &groups_damaged).rev() {
-            for _ in 1..amount {
-                possible_springs.insert(idx, b'#');
-            }
-            possible_springs.insert(idx, b'.');
-        }
-        possible_springs.remove(0);
-        if std::iter::zip(&possible_springs, given_springs)
-            .all(|(p, &g)| matches!((p, g), (b'.', b'.' | b'?') | (b'#', b'#' | b'?')))
-        {
-            possible += 1;
-        }
-    }
-
-    possible
 }
 
 pub fn part2(input: &str) -> usize {
     let mut memoize = HashMap::new();
     input
         .lines()
-        .enumerate()
-        .map(|(n, line)| {
-            println!("{n}");
-            line
-        })
         .map(extract_info)
         .map(|(given_springs, groups_damaged)| {
             let new_springs = [given_springs; 5].join(&b'?');
-            let new_groups_damaged = [&groups_damaged; 5]
-                .into_iter()
-                .flatten()
-                .copied()
-                .collect_vec();
+            let new_groups_damaged = [groups_damaged.as_slice(); 5].concat();
 
-            count_possible_arrangements_2((&new_springs, &new_groups_damaged), &mut memoize)
+            count_possible_arrangements((&new_springs, &new_groups_damaged), &mut memoize)
         })
         .sum()
 }
 
-fn count_possible_arrangements_2(
+fn count_possible_arrangements(
     (given_springs, groups_damaged): (&[u8], &[usize]),
     memoize: &mut HashMap<(Vec<u8>, Vec<usize>), usize>,
 ) -> usize {
+    let given_springs = given_springs.trim_with(|ch| ch == '.');
     if let Some(&out) = memoize.get(&(given_springs.to_vec(), groups_damaged.to_vec())) {
         return out;
     }
     match given_springs {
-        [] => usize::from(groups_damaged.len() == 0),
+        [] => 0,
         [b'?', rest @ ..] => {
             let given_springs = [b"#", rest].concat();
-            let out1 = count_possible_arrangements_2((&given_springs, groups_damaged), memoize);
-            memoize.insert((given_springs.to_vec(), groups_damaged.to_vec()), out1);
+            let out1 = count_possible_arrangements((&given_springs, groups_damaged), memoize);
+            memoize.insert((given_springs.clone(), groups_damaged.to_vec()), out1);
 
-            let given_springs = [b".", rest].concat();
-            let out2 = count_possible_arrangements_2((&given_springs, groups_damaged), memoize);
-            memoize.insert((given_springs.to_vec(), groups_damaged.to_vec()), out2);
+            let out2 = count_possible_arrangements((rest, groups_damaged), memoize);
+            memoize.insert((rest.to_vec(), groups_damaged.to_vec()), out2);
 
             out1 + out2
         }
-        [b'.', ..] => {
-            let given_springs = given_springs.trim_with(|ch| ch == '.');
-            let out = count_possible_arrangements_2((given_springs, groups_damaged), memoize);
-            memoize.insert((given_springs.to_vec(), groups_damaged.to_vec()), out);
-            out
-        }
         [b'#', ..] => {
-            if groups_damaged.len() == 0 {
+            let &[first_group, ref rest_groups @ ..] = groups_damaged else {
+                unreachable!(
+                    "we check if `rest_groups` is empty so `groups_damaged` always has elements"
+                )
+            };
+            if first_group > given_springs.len() {
                 return 0;
             }
-            if given_springs.len() < groups_damaged[0] {
+            let (start_springs, following_springs) = given_springs.split_at(first_group);
+            if start_springs.iter().any(|&ch| ch == b'.') {
                 return 0;
             }
-            if given_springs[0..groups_damaged[0]]
-                .into_iter()
-                .any(|&ch| ch == b'.')
-            {
-                return 0;
-            }
-            if groups_damaged.len() == 1 {
-                let given_springs = &given_springs[groups_damaged[0]..];
-                let groups_damaged = &groups_damaged[1..];
-                let out = count_possible_arrangements_2((given_springs, groups_damaged), memoize);
-                memoize.insert((given_springs.to_vec(), groups_damaged.to_vec()), out);
-                out
+            if rest_groups.is_empty() {
+                usize::from(following_springs.iter().all(|&ch| ch != b'#'))
             } else {
-                if given_springs.len() == groups_damaged[0]
-                    || given_springs[groups_damaged[0]] == b'#'
-                {
+                let [b'.' | b'?', rest_springs @ ..] = following_springs else {
                     return 0;
-                }
-                let given_springs = &given_springs[groups_damaged[0] + 1..];
-                let groups_damaged = &groups_damaged[1..];
-                let out = count_possible_arrangements_2((given_springs, groups_damaged), memoize);
-                memoize.insert((given_springs.to_vec(), groups_damaged.to_vec()), out);
+                };
+                let out = count_possible_arrangements((rest_springs, rest_groups), memoize);
+                memoize.insert((rest_springs.to_vec(), rest_groups.to_vec()), out);
                 out
             }
         }
-        [other, ..] => {
-            unreachable!("{}", *other as char);
-        }
+        [_other, ..] => unreachable!(),
     }
 }
 
