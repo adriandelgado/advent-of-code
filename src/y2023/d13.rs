@@ -4,6 +4,10 @@ pub fn part1(input: &str) -> usize {
     input.split_inclusive("\n\n").map(pattern_notes::<0>).sum()
 }
 
+pub fn part2(input: &str) -> usize {
+    input.split_inclusive("\n\n").map(pattern_notes::<1>).sum()
+}
+
 fn pattern_notes<const DISTANCE: usize>(pattern: &str) -> usize {
     let pattern = Grid::from_str(pattern).unwrap();
     let mut rows_above = 0;
@@ -46,10 +50,6 @@ fn pattern_notes<const DISTANCE: usize>(pattern: &str) -> usize {
     }
 
     rows_above * 100 + cols_before
-}
-
-pub fn part2(input: &str) -> usize {
-    input.split_inclusive("\n\n").map(pattern_notes::<1>).sum()
 }
 
 struct Grid<'a> {
