@@ -1,86 +1,84 @@
-use bstr::ByteSlice;
+use std::ops::Range;
 
 pub fn part1(input: &str) -> usize {
-    input
-        .split("\n\n")
-        .map(|part| pattern_notes_1(part.as_bytes()))
-        .sum()
+    input.split_inclusive("\n\n").map(pattern_notes::<0>).sum()
 }
 
-fn pattern_notes_1(part: &[u8]) -> usize {
-    let grid: Vec<_> = part.lines().collect();
+fn pattern_notes<const DISTANCE: usize>(pattern: &str) -> usize {
+    let pattern = Grid::from_str(pattern).unwrap();
+    let mut rows_above = 0;
+    let mut cols_before = 0;
 
-    let mut num_rows = 0;
-    let mut num_cols = 0;
+    for row_idx in 1..pattern.col_len {
+        let end = (2 * row_idx).min(pattern.col_len);
+        let start = 2 * row_idx - end;
 
-    for row_idx in 1..grid.len() {
-        let start = (2 * row_idx).saturating_sub(grid.len());
-        let end = (2 * row_idx).min(grid.len());
-
-        if itertools::equal(&grid[start..row_idx], grid[row_idx..end].iter().rev()) {
-            num_rows = row_idx;
+        if std::iter::zip(
+            pattern.rows_slice(start..row_idx).rev().flatten(),
+            pattern.rows_slice(row_idx..end).flatten(),
+        )
+        .filter(|(l, r)| l != r)
+        .count()
+            == DISTANCE
+        {
+            rows_above = row_idx;
+            break;
         }
     }
 
-    for col_idx in 1..grid[0].len() {
-        let start = (2 * col_idx).saturating_sub(grid[0].len());
-        let end = (2 * col_idx).min(grid[0].len());
+    for col_idx in 1..pattern.row_len {
+        let end = (2 * col_idx).min(pattern.row_len);
+        let start = 2 * col_idx - end;
 
-        if itertools::equal(
-            grid.iter().flat_map(|row| row[start..col_idx].iter()),
-            grid.iter().flat_map(|row| row[col_idx..end].iter().rev()),
-        ) {
-            num_cols = col_idx;
+        if std::iter::zip(
+            pattern
+                .all_rows()
+                .flat_map(|row| row[start..col_idx].iter().rev()),
+            pattern.all_rows().flat_map(|row| &row[col_idx..end]),
+        )
+        .filter(|(l, r)| l != r)
+        .count()
+            == DISTANCE
+        {
+            cols_before = col_idx;
+            break;
         }
     }
 
-    num_rows * 100 + num_cols
+    rows_above * 100 + cols_before
 }
 
 pub fn part2(input: &str) -> usize {
-    input
-        .split("\n\n")
-        .map(|part| pattern_notes_2(part.as_bytes()))
-        .sum()
+    input.split_inclusive("\n\n").map(pattern_notes::<1>).sum()
 }
 
-fn pattern_notes_2(part: &[u8]) -> usize {
-    let grid: Vec<_> = part.lines().collect();
+struct Grid<'a> {
+    inner: &'a [u8],
+    row_len: usize,
+    col_len: usize,
+}
 
-    let mut num_rows = 0;
-    let mut num_cols = 0;
-
-    for row_idx in 1..grid.len() {
-        let start = (2 * row_idx).saturating_sub(grid.len());
-        let end = (2 * row_idx).min(grid.len());
-
-        if std::iter::zip(
-            grid[start..row_idx].iter().copied().flatten(),
-            grid[row_idx..end].iter().rev().copied().flatten(),
-        )
-        .filter(|(l, r)| l != r)
-        .count()
-            == 1
-        {
-            num_rows = row_idx;
-        }
+impl<'a> Grid<'a> {
+    fn from_str(input: &'a str) -> Option<Self> {
+        let row_len = input.find('\n')?;
+        Some(Self {
+            inner: input.as_bytes(),
+            row_len,
+            col_len: input.len() / (row_len + 1),
+        })
     }
 
-    for col_idx in 1..grid[0].len() {
-        let start = (2 * col_idx).saturating_sub(grid[0].len());
-        let end = (2 * col_idx).min(grid[0].len());
-
-        if std::iter::zip(
-            grid.iter().flat_map(|row| row[start..col_idx].iter()),
-            grid.iter().flat_map(|row| row[col_idx..end].iter().rev()),
-        )
-        .filter(|(l, r)| l != r)
-        .count()
-            == 1
-        {
-            num_cols = col_idx;
-        }
+    fn rows_slice(&self, range: Range<usize>) -> impl DoubleEndedIterator<Item = &[u8]> + '_ {
+        self.inner
+            .chunks_exact(self.row_len + 1)
+            .map(|row_lf| &row_lf[..self.row_len])
+            .skip(range.start)
+            .take(range.end - range.start)
     }
 
-    num_rows * 100 + num_cols
+    fn all_rows(&self) -> impl Iterator<Item = &[u8]> + '_ {
+        self.inner
+            .chunks_exact(self.row_len + 1)
+            .map(|row_lf| &row_lf[..self.row_len])
+    }
 }
