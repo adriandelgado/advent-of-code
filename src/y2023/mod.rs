@@ -14,6 +14,7 @@ mod d09;
 mod d10;
 mod d11;
 mod d12;
+mod d13;
 
 #[must_use]
 pub fn solve(day: u8, part: u8, input: &str) -> Box<dyn Display> {
@@ -42,6 +43,8 @@ pub fn solve(day: u8, part: u8, input: &str) -> Box<dyn Display> {
         (11, 2) => Box::new(timing_fn(|| d11::part2(input))),
         (12, 1) => Box::new(timing_fn(|| d12::part1(input))),
         (12, 2) => Box::new(timing_fn(|| d12::part2(input))),
+        (13, 1) => Box::new(timing_fn(|| d13::part1(input))),
+        (13, 2) => Box::new(timing_fn(|| d13::part2(input))),
         _ => unimplemented!(), // TODO: unreachable once completed
     }
 }
