@@ -42,7 +42,7 @@ pub fn part2(input: &str) -> usize {
 
     for s in 0..SIMULS {
         if let Some(last_s) = seen.insert(grid.clone(), s) {
-            let target_simul = (SIMULS - last_s) % (s - last_s) + last_s;
+            let target_simul = (SIMULS - last_s) % (s - last_s) + last_s - 1;
             return get_north_load(previous_loads[target_simul].view());
         }
         run_simulation(grid.view_mut());
