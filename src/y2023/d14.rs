@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use itertools::Itertools;
-
 pub fn part1(input: &str) -> usize {
     let grid: Vec<_> = input.lines().map(str::as_bytes).collect();
     let num_rows = grid.len();
@@ -40,8 +38,7 @@ pub fn part2(input: &str) -> usize {
     let mut seen = HashMap::new();
 
     for i in 0..SIMULS {
-        let unique_id = get_id(&grid);
-        if let Some(last_i) = seen.insert(unique_id, i) {
+        if let Some(last_i) = seen.insert(grid.clone(), i) {
             // grid nuevo
             let mut grid: Vec<_> = input.lines().map(|line| line.as_bytes().to_vec()).collect();
             for _ in 0..(SIMULS - last_i) % (i - last_i) + last_i {
@@ -54,37 +51,12 @@ pub fn part2(input: &str) -> usize {
     get_north_load(&grid)
 }
 
+#[allow(clippy::naive_bytecount)]
 fn get_north_load(grid: &[Vec<u8>]) -> usize {
-    let mut total_load = 0;
-
-    #[allow(clippy::naive_bytecount)]
-    for (row, load) in grid.iter().zip((1..=grid.len()).rev()) {
-        total_load += row.iter().filter(|&&ch| ch == b'O').count() * load;
-    }
-
-    total_load
-}
-
-fn get_id(grid: &[Vec<u8>]) -> Vec<u64> {
     grid.iter()
-        .flatten()
-        .chunks(39)
-        .into_iter()
-        .map(|chunk| {
-            chunk
-                .zip(0..)
-                .map(|(&ch, pos)| {
-                    let digit = match ch {
-                        b'#' => 2,
-                        b'O' => 1,
-                        _ => 0,
-                    };
-
-                    digit * 3_u64.pow(pos)
-                })
-                .sum()
-        })
-        .collect()
+        .zip((1..=grid.len()).rev())
+        .map(|(row, load)| row.iter().filter(|&&ch| ch == b'O').count() * load)
+        .sum()
 }
 
 fn run_simulation(grid: &mut [Vec<u8>]) {
