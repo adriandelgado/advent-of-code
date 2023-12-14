@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use itertools::Itertools;
 
 pub fn part1(input: &str) -> usize {
-    let grid: Vec<_> = input.lines().map(|line| line.as_bytes().to_vec()).collect();
+    let grid: Vec<_> = input.lines().map(str::as_bytes).collect();
     let num_rows = grid.len();
     let num_cols = grid[0].len();
 
@@ -24,8 +24,7 @@ pub fn part1(input: &str) -> usize {
                     total_load += next_load_amount;
                     next_load_amount -= 1;
                 }
-                b'.' => {}
-                _ => unreachable!(),
+                _ => {}
             }
         }
     }
@@ -43,6 +42,7 @@ pub fn part2(input: &str) -> usize {
     for i in 0..SIMULS {
         let unique_id = get_id(&grid);
         if let Some(last_i) = seen.insert(unique_id, i) {
+            // grid nuevo
             let mut grid: Vec<_> = input.lines().map(|line| line.as_bytes().to_vec()).collect();
             for _ in 0..(SIMULS - last_i) % (i - last_i) + last_i {
                 run_simulation(&mut grid);
@@ -57,6 +57,7 @@ pub fn part2(input: &str) -> usize {
 fn get_north_load(grid: &[Vec<u8>]) -> usize {
     let mut total_load = 0;
 
+    #[allow(clippy::naive_bytecount)]
     for (row, load) in grid.iter().zip((1..=grid.len()).rev()) {
         total_load += row.iter().filter(|&&ch| ch == b'O').count() * load;
     }
@@ -105,29 +106,27 @@ fn run_simulation(grid: &mut [Vec<u8>]) {
                     grid[next_row_idx][col_idx] = b'O';
                     next_row_idx += 1;
                 }
-                b'.' => {}
-                _ => unreachable!(),
+                _ => {}
             }
         }
     }
 
     // west
-    for row_idx in 0..num_rows {
+    for row in grid.iter_mut() {
         let mut next_col_idx = 0;
 
         for col_idx in 0..num_cols {
-            let rock = grid[row_idx][col_idx];
+            let rock = row[col_idx];
             match rock {
                 b'#' => {
                     next_col_idx = col_idx + 1;
                 }
                 b'O' => {
-                    grid[row_idx][col_idx] = b'.';
-                    grid[row_idx][next_col_idx] = b'O';
+                    row[col_idx] = b'.';
+                    row[next_col_idx] = b'O';
                     next_col_idx += 1;
                 }
-                b'.' => {}
-                _ => unreachable!(),
+                _ => {}
             }
         }
     }
@@ -147,29 +146,27 @@ fn run_simulation(grid: &mut [Vec<u8>]) {
                     grid[next_row_idx][col_idx] = b'O';
                     next_row_idx = next_row_idx.saturating_sub(1);
                 }
-                b'.' => {}
-                _ => unreachable!(),
+                _ => {}
             }
         }
     }
 
     // east
-    for row_idx in 0..num_rows {
+    for row in grid.iter_mut() {
         let mut next_col_idx = num_cols - 1;
 
         for col_idx in (0..num_cols).rev() {
-            let rock = grid[row_idx][col_idx];
+            let rock = row[col_idx];
             match rock {
                 b'#' => {
                     next_col_idx = col_idx.saturating_sub(1);
                 }
                 b'O' => {
-                    grid[row_idx][col_idx] = b'.';
-                    grid[row_idx][next_col_idx] = b'O';
+                    row[col_idx] = b'.';
+                    row[next_col_idx] = b'O';
                     next_col_idx = next_col_idx.saturating_sub(1);
                 }
-                b'.' => {}
-                _ => unreachable!(),
+                _ => {}
             }
         }
     }
