@@ -7,7 +7,6 @@ use winnow::{
     PResult, Parser,
 };
 
-// 511416
 pub fn part1(input: &str) -> usize {
     input.trim().split(',').map(str::as_bytes).map(hash).sum()
 }
@@ -21,7 +20,6 @@ fn hash(input: &[u8]) -> usize {
     current_value as usize
 }
 
-// 290779 202 - 215
 pub fn part2(input: &str) -> usize {
     let mut lenses: Vec<Vec<(&[u8], usize)>> = Vec::with_capacity(255);
     for _ in 0..255 {
