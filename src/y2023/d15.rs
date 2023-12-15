@@ -1,8 +1,6 @@
-use std::iter;
-
 use winnow::{
     ascii::alpha1,
-    combinator::{alt, preceded},
+    combinator::{dispatch, fail, success},
     token::any,
     PResult, Parser,
 };
@@ -26,31 +24,31 @@ pub fn part2(input: &str) -> usize {
         lenses.push(Vec::new());
     }
 
-    for ((box_idx, label), op) in input
+    for (label, op) in input
         .trim_end()
         .split(',')
         .map(str::as_bytes)
         .map(|op| operation.parse(op).unwrap())
     {
-        let maybe_idx = lenses[box_idx].iter().position(|&(b, _)| b == label);
-        match (op, maybe_idx) {
-            (Op::Dash, Some(label_idx)) => {
-                lenses[box_idx].remove(label_idx);
+        let current_box = &mut lenses[hash(label)];
+        match (op, current_box.iter().position(|&(b, _)| b == label)) {
+            (Op::Insert(focal_lenght), Some(label_idx)) => {
+                current_box[label_idx].1 = focal_lenght;
             }
-            (Op::Eq(focal_lenght), Some(label_idx)) => {
-                lenses[box_idx][label_idx].1 = focal_lenght;
+            (Op::Insert(focal_lenght), None) => {
+                current_box.push((label, focal_lenght));
             }
-            (Op::Eq(focal_lenght), None) => {
-                lenses[box_idx].push((label, focal_lenght));
+            (Op::Remove, Some(label_idx)) => {
+                current_box.remove(label_idx);
             }
-            _ => {}
+            (Op::Remove, None) => {}
         }
     }
 
     let mut focusing_power = 0;
 
-    for (lens_box, box_num) in iter::zip(lenses, 1..) {
-        for ((_, focal_len), slot) in iter::zip(lens_box, 1..) {
+    for (box_num, lens_box) in std::iter::zip(1.., lenses) {
+        for (slot, (_, focal_len)) in std::iter::zip(1.., lens_box) {
             focusing_power += box_num * slot * focal_len;
         }
     }
@@ -60,17 +58,18 @@ pub fn part2(input: &str) -> usize {
 
 #[derive(Debug, Clone, Copy)]
 enum Op {
-    Dash,
-    Eq(usize),
+    Remove,
+    Insert(usize),
 }
 
-fn operation<'a>(input: &mut &'a [u8]) -> PResult<((usize, &'a [u8]), Op)> {
+fn operation<'a>(input: &mut &'a [u8]) -> PResult<(&'a [u8], Op)> {
     (
-        alpha1.map(|label| (hash(label), label)),
-        alt((
-            preceded(b'=', any).map(|fl| Op::Eq((fl - b'0') as usize)),
-            b'-'.value(Op::Dash),
-        )),
+        alpha1,
+        dispatch! {any;
+            b'=' => any.map(|fl| Op::Insert((fl - b'0') as usize)),
+            b'-' => success(Op::Remove),
+            _ => fail
+        },
     )
         .parse_next(input)
 }
