@@ -19,8 +19,8 @@ fn hash(input: &[u8]) -> usize {
 }
 
 pub fn part2(input: &str) -> usize {
-    let mut lenses: Vec<Vec<(&[u8], usize)>> = Vec::with_capacity(255);
-    for _ in 0..255 {
+    let mut lenses = Vec::with_capacity(256);
+    for _ in 0..256 {
         lenses.push(Vec::new());
     }
 
