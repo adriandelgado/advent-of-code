@@ -1,4 +1,4 @@
-use std::{collections::HashSet, iter};
+use std::collections::HashSet;
 
 use ndarray::{Array2, ArrayView2};
 
@@ -91,17 +91,17 @@ enum Dir {
 }
 
 impl Dir {
-    fn next(self, current: u8) -> impl Iterator<Item = Dir> {
-        let (first, maybe_second) = match (self, current) {
-            (Dir::Up, b'\\') | (Dir::Down, b'/') => (Dir::Left, None),
-            (Dir::Up, b'/') | (Dir::Down, b'\\') => (Dir::Right, None),
-            (Dir::Left, b'\\') | (Dir::Right, b'/') => (Dir::Up, None),
-            (Dir::Left, b'/') | (Dir::Right, b'\\') => (Dir::Down, None),
-            (Dir::Up | Dir::Down, b'-') => (Dir::Right, Some(Dir::Left)),
-            (Dir::Left | Dir::Right, b'|') => (Dir::Down, Some(Dir::Up)),
-            (dir, _) => (dir, None),
+    fn next(self, current: u8) -> impl Iterator<Item = Self> {
+        let arr = match (self, current) {
+            (Dir::Up, b'\\') | (Dir::Down, b'/') => [Some(Dir::Left), None],
+            (Dir::Up, b'/') | (Dir::Down, b'\\') => [Some(Dir::Right), None],
+            (Dir::Left, b'\\') | (Dir::Right, b'/') => [Some(Dir::Up), None],
+            (Dir::Left, b'/') | (Dir::Right, b'\\') => [Some(Dir::Down), None],
+            (Dir::Up | Dir::Down, b'-') => [Some(Dir::Right), Some(Dir::Left)],
+            (Dir::Left | Dir::Right, b'|') => [Some(Dir::Down), Some(Dir::Up)],
+            (dir, _) => [Some(dir), None],
         };
 
-        iter::once(first).chain(maybe_second)
+        arr.into_iter().flatten()
     }
 }
