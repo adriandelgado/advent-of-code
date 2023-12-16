@@ -1,42 +1,42 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, iter};
 
-use ndarray::ArrayView2;
+use ndarray::{Array2, ArrayView2};
 
-pub fn part1(input: &str) -> usize {
-    let num_rows = input.lines().count();
-    let num_cols = input.find('\n').unwrap();
-    let grid = ArrayView2::from_shape((num_rows, num_cols + 1), input.as_bytes()).unwrap();
+fn count_energized(init: ((usize, usize), Dir), grid: ArrayView2<u8>) -> u16 {
+    let (num_rows, modulo) = grid.dim();
+    let num_cols = modulo - 1;
 
-    let mut energized = HashSet::new();
-    energized.insert((0, 0));
+    let mut energized = Array2::<bool>::default((num_rows, num_cols));
+    energized[init.0] = true;
+
     let mut visited = HashSet::new();
+    visited.insert(init);
 
-    let mut stack = vec![((0_usize, 0_usize), Dir::Right)];
-
+    let mut stack = vec![init];
     while let Some(((c_row, c_col), c_dir)) = stack.pop() {
         for n_dir in c_dir.next(grid[(c_row, c_col)]) {
             match n_dir {
                 Dir::Up => {
                     if c_row > 0 && visited.insert(((c_row - 1, c_col), n_dir)) {
-                        energized.insert((c_row - 1, c_col));
+                        energized[(c_row - 1, c_col)] = true;
                         stack.push(((c_row - 1, c_col), n_dir));
                     }
                 }
                 Dir::Down => {
                     if c_row + 1 < num_rows && visited.insert(((c_row + 1, c_col), n_dir)) {
-                        energized.insert((c_row + 1, c_col));
+                        energized[(c_row + 1, c_col)] = true;
                         stack.push(((c_row + 1, c_col), n_dir));
                     }
                 }
                 Dir::Left => {
                     if c_col > 0 && visited.insert(((c_row, c_col - 1), n_dir)) {
-                        energized.insert((c_row, c_col - 1));
+                        energized[(c_row, c_col - 1)] = true;
                         stack.push(((c_row, c_col - 1), n_dir));
                     }
                 }
                 Dir::Right => {
                     if c_col + 1 < num_cols && visited.insert(((c_row, c_col + 1), n_dir)) {
-                        energized.insert((c_row, c_col + 1));
+                        energized[(c_row, c_col + 1)] = true;
                         stack.push(((c_row, c_col + 1), n_dir));
                     }
                 }
@@ -44,7 +44,42 @@ pub fn part1(input: &str) -> usize {
         }
     }
 
-    energized.len()
+    energized
+        .as_slice_memory_order()
+        .unwrap()
+        .iter()
+        .fold(0, |acc, &b| acc + u16::from(b))
+}
+
+pub fn part1(input: &str) -> u16 {
+    let num_rows = input.lines().count();
+    let num_cols = input.find('\n').unwrap();
+    let grid = ArrayView2::from_shape((num_rows, num_cols + 1), input.as_bytes()).unwrap();
+
+    count_energized(((0_usize, 0_usize), Dir::Right), grid)
+}
+
+pub fn part2(input: &str) -> u16 {
+    let num_rows = input.lines().count();
+    let num_cols = input.find('\n').unwrap();
+    let grid = ArrayView2::from_shape((num_rows, num_cols + 1), input.as_bytes()).unwrap();
+
+    let mut max_energized = 0;
+
+    for col in 0..num_cols {
+        let init = ((0, col), Dir::Down);
+        max_energized = max_energized.max(count_energized(init, grid));
+        let init = ((num_rows - 1, col), Dir::Up);
+        max_energized = max_energized.max(count_energized(init, grid));
+    }
+    for row in 0..num_rows {
+        let init = ((row, 0), Dir::Right);
+        max_energized = max_energized.max(count_energized(init, grid));
+        let init = ((row, num_rows - 1), Dir::Left);
+        max_energized = max_energized.max(count_energized(init, grid));
+    }
+
+    max_energized
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -54,95 +89,19 @@ enum Dir {
     Left,
     Right,
 }
+
 impl Dir {
-    fn next(self, current: u8) -> Vec<Dir> {
-        match (self, current) {
-            (Dir::Up, b'\\') => vec![Dir::Left],
-            (Dir::Down, b'/') => vec![Dir::Left],
-            (Dir::Left, b'-') => vec![Dir::Left],
-            (Dir::Left, b'.') => vec![Dir::Left],
-            (Dir::Up, b'/') => vec![Dir::Right],
-            (Dir::Down, b'\\') => vec![Dir::Right],
-            (Dir::Right, b'-') => vec![Dir::Right],
-            (Dir::Right, b'.') => vec![Dir::Right],
-            (Dir::Up, b'|') => vec![Dir::Up],
-            (Dir::Up, b'.') => vec![Dir::Up],
-            (Dir::Left, b'\\') => vec![Dir::Up],
-            (Dir::Right, b'/') => vec![Dir::Up],
-            (Dir::Down, b'|') => vec![Dir::Down],
-            (Dir::Down, b'.') => vec![Dir::Down],
-            (Dir::Left, b'/') => vec![Dir::Down],
-            (Dir::Right, b'\\') => vec![Dir::Down],
-            (Dir::Up, b'-') => vec![Dir::Right, Dir::Left],
-            (Dir::Down, b'-') => vec![Dir::Right, Dir::Left],
-            (Dir::Left, b'|') => vec![Dir::Down, Dir::Up],
-            (Dir::Right, b'|') => vec![Dir::Down, Dir::Up],
-            _ => unreachable!(),
-        }
+    fn next(self, current: u8) -> impl Iterator<Item = Dir> {
+        let (first, maybe_second) = match (self, current) {
+            (Dir::Up, b'\\') | (Dir::Down, b'/') => (Dir::Left, None),
+            (Dir::Up, b'/') | (Dir::Down, b'\\') => (Dir::Right, None),
+            (Dir::Left, b'\\') | (Dir::Right, b'/') => (Dir::Up, None),
+            (Dir::Left, b'/') | (Dir::Right, b'\\') => (Dir::Down, None),
+            (Dir::Up | Dir::Down, b'-') => (Dir::Right, Some(Dir::Left)),
+            (Dir::Left | Dir::Right, b'|') => (Dir::Down, Some(Dir::Up)),
+            (dir, _) => (dir, None),
+        };
+
+        iter::once(first).chain(maybe_second)
     }
-}
-
-pub fn part2(input: &str) -> usize {
-    let num_rows = input.lines().count();
-    let num_cols = input.find('\n').unwrap();
-    let grid = ArrayView2::from_shape((num_rows, num_cols + 1), input.as_bytes()).unwrap();
-
-    let mut initial_states = Vec::new();
-    for col in 0..num_cols {
-        initial_states.push(((0, col), Dir::Down));
-    }
-    for col in 0..num_cols {
-        initial_states.push(((num_rows - 1, col), Dir::Up));
-    }
-    for row in 0..num_rows {
-        initial_states.push(((row, 0), Dir::Right));
-    }
-    for row in 0..num_rows {
-        initial_states.push(((row, num_rows - 1), Dir::Left));
-    }
-
-    let mut max_energized = 0;
-
-    for init in initial_states {
-        let mut energized = HashSet::new();
-        energized.insert(init.0);
-        let mut visited = HashSet::new();
-
-        let mut stack = vec![init];
-
-        while let Some(((c_row, c_col), c_dir)) = stack.pop() {
-            for n_dir in c_dir.next(grid[(c_row, c_col)]) {
-                match n_dir {
-                    Dir::Up => {
-                        if c_row > 0 && visited.insert(((c_row - 1, c_col), n_dir)) {
-                            energized.insert((c_row - 1, c_col));
-                            stack.push(((c_row - 1, c_col), n_dir));
-                        }
-                    }
-                    Dir::Down => {
-                        if c_row + 1 < num_rows && visited.insert(((c_row + 1, c_col), n_dir)) {
-                            energized.insert((c_row + 1, c_col));
-                            stack.push(((c_row + 1, c_col), n_dir));
-                        }
-                    }
-                    Dir::Left => {
-                        if c_col > 0 && visited.insert(((c_row, c_col - 1), n_dir)) {
-                            energized.insert((c_row, c_col - 1));
-                            stack.push(((c_row, c_col - 1), n_dir));
-                        }
-                    }
-                    Dir::Right => {
-                        if c_col + 1 < num_cols && visited.insert(((c_row, c_col + 1), n_dir)) {
-                            energized.insert((c_row, c_col + 1));
-                            stack.push(((c_row, c_col + 1), n_dir));
-                        }
-                    }
-                }
-            }
-        }
-
-        max_energized = max_energized.max(energized.len());
-    }
-
-    max_energized
 }
