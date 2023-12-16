@@ -20,9 +20,7 @@ fn hash(input: &[u8]) -> usize {
 
 pub fn part2(input: &str) -> usize {
     let mut lenses = Vec::with_capacity(256);
-    for _ in 0..256 {
-        lenses.push(Vec::new());
-    }
+    lenses.resize(256, Vec::with_capacity(10));
 
     for (label, op) in input
         .trim_end()
