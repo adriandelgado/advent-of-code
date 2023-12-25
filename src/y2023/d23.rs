@@ -82,8 +82,10 @@ pub fn part2(input: &str) -> u16 {
         .into_iter()
         .filter(|&n| n == b'#')
         .count()
-            != 2
+            == 2
         {
+            forks
+        } else {
             if forks.contains(&(curr_x, curr_y)) {
                 continue;
             } else {
@@ -91,8 +93,6 @@ pub fn part2(input: &str) -> u16 {
                 forks.insert((curr_x, curr_y));
                 Rc::new(forks)
             }
-        } else {
-            forks
         };
 
         // Up
