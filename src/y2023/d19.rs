@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, VecDeque},
-    ops::RangeInclusive,
-};
+use std::collections::{HashMap, VecDeque};
 
 use winnow::{
     ascii::{alpha1, dec_uint},
@@ -49,12 +46,16 @@ pub fn part2(input: &str) -> u64 {
     let mut queue = VecDeque::from([("in", [(1, 4001), (1, 4001), (1, 4001), (1, 4001)])]);
 
     while let Some((wf, ranges)) = queue.pop_front() {
-        for Rule { condition, action } in workflows[wf].iter() {
+        for Rule {
+            condition,
+            action: _,
+        } in workflows[wf].iter()
+        {
             match condition {
                 Condition::Gt(part, other) => {
-                    let (true_ranges, false_ranges) = part.split_gt(*other, ranges);
+                    let (_true_ranges, _false_ranges) = part.split_gt(*other, ranges);
                 }
-                Condition::Lt(part, other) => todo!(),
+                Condition::Lt(_part, _other) => todo!(),
                 Condition::Default => todo!(),
             }
         }
@@ -110,7 +111,7 @@ enum Part {
 }
 
 impl Part {
-    fn split_gt(self, other: u16, ranges: [(u16, u16); 4]) -> ([(u16, u16); 4], [(u16, u16); 4]) {
+    fn split_gt(self, _other: u16, _ranges: [(u16, u16); 4]) -> ([(u16, u16); 4], [(u16, u16); 4]) {
         todo!()
     }
 }

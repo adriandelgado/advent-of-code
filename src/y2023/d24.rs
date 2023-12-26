@@ -28,13 +28,11 @@ pub fn part2(input: &str) -> i64 {
             let cross_pv_01 = cross(dp_01, dv_01);
             let cross_pv_02 = cross(dp_02, dv_02);
             let cross_pv_12 = cross(dp_12, dv_12);
-            let dp_01 = dp_01.map(|v| v as f64);
-            let dp_02 = dp_02.map(|v| v as f64);
-            let dp_12 = dp_12.map(|v| v as f64);
 
-            let dp_01 = faer::mat::from_column_major_slice::<f64>(&dp_01, 3, 1);
-            let dp_02 = faer::mat::from_column_major_slice::<f64>(&dp_02, 3, 1);
-            let dp_12 = faer::mat::from_column_major_slice::<f64>(&dp_12, 3, 1);
+            let dp_01 = Mat::from_fn(3, 1, |i, _| dp_01[i] as f64);
+            let dp_02 = Mat::from_fn(3, 1, |i, _| dp_02[i] as f64);
+            let dp_12 = Mat::from_fn(3, 1, |i, _| dp_12[i] as f64);
+
             let cross_v01 = faer::mat::from_column_major_slice::<f64>(&cross_v01, 3, 1);
             let cross_v02 = faer::mat::from_column_major_slice::<f64>(&cross_v02, 3, 1);
             let cross_v12 = faer::mat::from_column_major_slice::<f64>(&cross_v12, 3, 1);
